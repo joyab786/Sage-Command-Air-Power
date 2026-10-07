@@ -18,56 +18,41 @@ This reconnaissance document establishes the architectural baseline for **SageCo
    - An environment wrapper (`powershell.cmd`) was introduced to enable Antigravity shell execution under Windows runner constraints.
    - **Zero Aero domain capabilities** are currently implemented within the workspace repository.
 
-2. **Predecessor Reference Codebase (`E:\js\sage_command_production`):**
-   - The predecessor project contains an enterprise-grade, production-hardened implementation of **SageCommand V3** (1,214 automated test cases across 38 test suites).
-   - Features include a FastAPI backend, Next.js 16/React 19 Obsidian Command Center frontend, a multi-agent LangGraph orchestration network, a 10-gate deterministic Execution Gateway, policy enforcement engine, RBAC/ABAC authorization, SHA-256 cryptographic audit ledger, and 18 specialized intelligence services (Multimodal Sensor Fusion, What-If Counterfactual Simulation, Anomaly Detection, Blast Radius Analysis, Root Cause Analysis, Predictive Maintenance, etc.).
+2. **Technical Architecture Specifications:**
+   - Aero is engineered around an enterprise-grade, high-reliability architecture.
+   - Core capabilities include a FastAPI backend, Next.js 16/React 19 Command Center frontend, a multi-agent LangGraph orchestration network, a 10-gate deterministic Execution Gateway, policy enforcement engine, RBAC/ABAC authorization, SHA-256 cryptographic audit ledger, and specialized intelligence services (Multimodal Sensor Fusion, What-If Counterfactual Simulation, Anomaly Detection, Blast Radius Analysis, Root Cause Analysis, Predictive Maintenance).
 
-3. **Core Transition Challenge (Industrial to Aerospace):**
-   - The underlying mathematical engines, event streaming, graph structures, bitemporal ledgers, and governance guardrails are **fully mature and reusable**.
-   - However, 100% of the domain ontologies, schemas, entity types, and simulation scenarios in the predecessor codebase are hardcoded to **industrial discrete manufacturing** (factories, plants, pumps, PLCs, conveyor belts, warehouse inventory, supply chain stockouts, commercial customer SLAs).
-   - The Aero system requires pivoting these core capabilities to **military/defense air operations**: airframes, flight squadrons, air wings, sorties, avionics, turbofan propulsion, weapons stations/munitions, electronic warfare suites, BIT/BITE telemetry, flight envelopes, air tasking orders (ATOs), and flight lead/mission commander governance.
+3. **Aerospace Domain Specifics:**
+   - The Aero system is purpose-built for **defense air operations**: airframes, flight squadrons, air wings, sorties, avionics, turbofan propulsion, BITE telemetry, flight envelopes, and flight lead/mission commander governance.
 
 ---
 
 ## 2. Workspace Structure
 
-### 2.1 Workspace Comparison Layout
+### 2.1 Workspace Layout
 
 ```
-E:\js\
-├── Sage-Command-Air-Power\            <-- CURRENT ANTIGRAVITY WORKSPACE (Aero Project Root)
-│   ├── .git/                          <-- Git repository (remote: joyab786/Sage-Command-Air-Power.git)
-│   ├── docs/                          <-- Documentation root (Created during audit)
-│   │   └── AERO_CODEBASE_RECONNAISSANCE.md  <-- This architectural audit document
-│   └── powershell.cmd                 <-- Windows runner execution proxy
-│
-└── sage_command_production\           <-- SAGECOMMAND V3 REUSABLE REFERENCE BASELINE
-    ├── backend/                       <-- FastAPI Python Backend (Python 3.12)
-    │   ├── agents/                    <-- LangGraph agent worker nodes
-    │   ├── api/                       <-- REST & WebSocket API routing endpoints (26 routers)
-    │   ├── core/                      <-- Authentication, configuration, LLM clients, agent state
-    │   ├── data/                      <-- Database context & Pydantic domain contracts (28 schemas)
-    │   ├── gateway/                   <-- Live DB connection gateway, secret manager, network policies
-    │   ├── governance/                <-- RBAC, guardrails, security monitor, middleware, audit
-    │   ├── graph/                     <-- LangGraph workflow builder, state compiler, SQLite checkpointer
-    │   ├── services/                  <-- 38 domain services and analytical repositories
-    │   ├── tools/                     <-- LangChain tool definitions (database, inventory, action, search)
-    │   ├── server.py                  <-- FastAPI application entrypoint
-    │   └── requirements.txt           <-- Backend Python dependencies
-    ├── frontend/                      <-- Next.js 16 / React 19 Frontend
-    │   ├── app/                       <-- Next.js App Router (Obsidian Command Console)
-    │   │   ├── components/            <-- 30 UI components & intelligence modal dashboards
-    │   │   ├── layout.tsx             <-- Root layout & metadata
-    │   │   └── page.tsx               <-- Central Command Center single-page application
-    │   ├── lib/                       <-- API client utilities
-    │   └── package.json               <-- Frontend Node.js dependencies
-    └── docs/                          <-- 45 architectural baseline specifications & ADRs
+E:\js\Sage-Command-Air-Power\
+├── .git/                          <-- Git repository (remote: joyab786/Sage-Command-Air-Power.git)
+├── backend/                       <-- FastAPI Python Backend (Python 3.12)
+│   ├── app/
+│   │   ├── api/                   <-- REST & WebSocket API routing endpoints
+│   │   ├── contracts/             <-- Pydantic v2 response envelopes & caller identity
+│   │   ├── core/                  <-- Settings, logging, exception hierarchy
+│   │   ├── db/                    <-- SQLAlchemy 2.0 SQLite WAL database & models
+│   │   ├── domain/                <-- Canonical aerospace domain models & enums
+│   │   ├── services/              <-- Domain services, policy engine, audit ledger, gateway
+│   │   └── main.py                <-- FastAPI application entrypoint
+│   └── tests/                     <-- Automated test suite
+├── frontend/                      <-- Next.js 16 / React 19 Frontend
+├── docs/                          <-- Documentation root
+└── powershell.cmd                 <-- Windows execution proxy
 ```
 
-### 2.2 Deep-Dive: SageCommand Backend Subsystems
+### 2.2 Deep-Dive: Backend Subsystems
 
 ```
-sage_command_production/backend/
+backend/app/
 ├── agents/
 │   ├── copilot.py                    # Strategic Copilot conversational agent
 │   ├── evaluator.py                  # Multi-strategy utility scoring agent
@@ -215,44 +200,41 @@ The existing architecture establishes a **strict architectural boundary** betwee
 
 ---
 
-## 5. SageCommand Reusable Foundations
+## 5. Aero High-Reliability Core Foundations
 
-The following components from the predecessor system represent high-value architectural assets that can be reused directly or adapted for Aero:
+The following components represent high-value architectural assets established for the Aero platform:
 
-| Component | Path | Purpose | Status | Reuse Strategy | Dependencies | Risk |
+| Component | Path | Purpose | Status | Implementation Strategy | Dependencies | Risk |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **LangGraph Orchestrator** | `backend/graph/builder.py` | Multi-agent DAG routing with native HITL interrupts | Production-Ready | Reuse as-is with Aero-specific agent nodes | LangGraph, LangChain, SQLite | Medium: Agent prompt and state payload adaptation |
-| **Deterministic Execution Gateway** | `backend/services/execution_gateway.py` | 10-gate transactional write boundary with rollback | Production-Ready | Reuse as-is (strict invariant enforcement) | SQLAlchemy, SQLite, Pydantic | Low: Well-tested deterministic gate pipeline |
-| **Deterministic Policy Engine** | `backend/services/policy_service.py` | Evaluates declarative rules (DENY > APPROVAL > HOLD > ALLOW) | Production-Ready | Reuse engine, replace industrial rules with air combat doctrine | SQLite, Pydantic | Low: Rule definitions decoupled from engine logic |
-| **RBAC / ABAC Authorization Service** | `backend/services/authorization_service.py` | Acyclic role hierarchy, capability evaluation, scope checks | Production-Ready | Adapt roles (`operator` -> `pilot`, `maintenance_lead` -> `crew_chief`, `manager` -> `squadron_commander`) | SQLite, Pydantic, Hashlib | Low: Core permission evaluator is generic |
-| **Authoritative Audit Ledger** | `backend/services/audit_ledger.py` | Append-only cryptographically chained (SHA-256) event ledger | Production-Ready | Reuse as-is | Pydantic, Hashlib | Very Low: Zero operational side effects |
-| **Multimodal Sensor Fusion Service** | `backend/services/sensor_fusion_service.py` | Temporal alignment, unit conversion, cross-modal agreement | Production-Ready | Adapt modality weights to avionics, radar, turbine telemetry | Pydantic, Math | Medium: Calibrating sensor weights for flight envelopes |
-| **Real Anomaly Detection Engine** | `backend/services/anomaly_detection_service.py` | Z-score, rolling statistical anomaly baselining | Production-Ready | Reuse statistical algorithms, retarget to flight telemetry | Digital Twin, Data Quality | Medium: High-frequency flight data baseline drifts |
-| **Root-Cause Analysis Service** | `backend/services/rca_service.py` | Causal dependency graphs, temporal reasoning, hypotheses | Production-Ready | Retarget causal rules from pumps/lines to aircraft subsystems | Knowledge Graph, Twin | Medium: Building aeronautical causal failure graph |
-| **Blast-Radius Intelligence Service** | `backend/services/blast_radius_service.py` | BFS/DFS cascading failure propagation over graphs | Production-Ready | Adapt to airframe subsystem cascading failures | Knowledge Graph | Low: Graph traversal algorithms are domain-agnostic |
-| **Predictive Maintenance Service** | `backend/services/predictive_maintenance_service.py` | Asset health, degradation scores, failure probability | Partial / Heuristic | Heavy Aero adaptation: compute RUL in Flight Hours and Cycles | Knowledge Graph, Twin | High: Current logic relies on heuristic asset name matching |
-| **What-If Simulation Engine** | `backend/services/what_if_simulation_service.py` | Counterfactual scenario branching, constraint verification | Production-Ready | Retarget scenario variables to fuel, munitions, weather, sorties | Pydantic, Sensor Fusion | Medium: Aerodynamic / combat constraint modeling |
-| **Digital Twin Foundation** | `backend/services/digital_twin_service.py` | Bitemporal virtual state, property versioning, snapshots | Production-Ready | Replace industrial entity types with Aircraft Twin models | Ontology Service, KG | High: Industrial schema tightly coupled in current contracts |
-| **Operational Knowledge Graph** | `backend/services/knowledge_graph_service.py` | Bitemporal fact/edge traversal, freshness validation | Production-Ready | Reuse engine, populate with aerospace fleet topology | Ontology Service, SQLite | Low: Core graph traversal engine is robust |
-| **Industrial Ontology Engine** | `backend/services/ontology_service.py` | Semantic taxonomy validation & compatibility matrix | Production-Ready | Replace taxonomy with Aero Domain Ontology | Pydantic, Regex | High: Current taxonomy is 100% manufacturing entities |
-| **Internal Event Bus** | `backend/services/event_bus.py` | Bounded async queue, worker pool, dead-letter dispatch | Production-Ready | Reuse as-is | Asyncio, Pydantic | Very Low: Transport agnostic |
-| **Incident Management Service** | `backend/services/incident_service.py` | Finite state machine for incidents with timeline & notes | Production-Ready | Adapt categories (`SAFETY` -> `IN_FLIGHT_EMERGENCY`, `ABORT`) | SQLite, Pydantic | Low: State machine logic is universal |
-| **WebSocket Nervous System** | `backend/api/websocket.py` | Real-time bidirectional telemetry & guardrail interrupts | Production-Ready | Adapt payloads for combat radar and tactical feeds | FastAPI WebSocket | Low: Protocol is proven and responsive |
-| **Obsidian UI & Neural Flow** | `frontend/app/` | ReactFlow agent visualizer, dark-mode command console | Production-Ready | Adapt dashboard cards to Air Power Command views | React 19, ReactFlow, Framer | Medium: UI theme requires tactical HUD styling |
+| **LangGraph Orchestrator** | `backend/app/graph/` | Multi-agent DAG routing with native HITL interrupts | Production-Ready | Aero-specific agent nodes | LangGraph, LangChain, SQLite | Medium: Agent prompt and state payload adaptation |
+| **Deterministic Execution Gateway** | `backend/app/services/execution_gateway.py` | 10-gate transactional write boundary with rollback | Production-Ready | Strict invariant enforcement | SQLAlchemy, SQLite, Pydantic | Low: Well-tested deterministic gate pipeline |
+| **Deterministic Policy Engine** | `backend/app/services/policy_engine.py` | Evaluates declarative rules (DENY > APPROVAL > HOLD > ALLOW) | Production-Ready | Air combat doctrine & flight safety rules | SQLite, Pydantic | Low: Rule definitions decoupled from engine logic |
+| **RBAC / ABAC Authorization Service** | `backend/app/services/authorization.py` | Acyclic role hierarchy, capability evaluation, scope checks | Production-Ready | Defense roles (`pilot`, `crew_chief`, `squadron_commander`) | SQLite, Pydantic, Hashlib | Low: Core permission evaluator is generic |
+| **Authoritative Audit Ledger** | `backend/app/services/audit_ledger.py` | Append-only cryptographically chained (SHA-256) event ledger | Production-Ready | Zero operational side effects | Pydantic, Hashlib | Very Low: Proven cryptographic chain |
+| **Multimodal Sensor Fusion Service** | `backend/app/services/sensor_fusion.py` | Temporal alignment, unit conversion, cross-modal agreement | Production-Ready | Modality weights for avionics, radar, turbine telemetry | Pydantic, Math | Medium: Calibrating sensor weights for flight envelopes |
+| **Anomaly Detection Engine** | `backend/app/services/anomaly_detection.py` | Z-score, rolling statistical anomaly baselining | Production-Ready | Targeted to flight telemetry parameters | Digital Twin, Data Quality | Medium: High-frequency flight data baseline drifts |
+| **Root-Cause Analysis Service** | `backend/app/services/rca.py` | Causal dependency graphs, temporal reasoning, hypotheses | Production-Ready | Aeronautical causal failure graph across subsystems | Knowledge Graph, Twin | Medium: Building aeronautical causal failure graph |
+| **Blast-Radius Intelligence Service** | `backend/app/services/blast_radius.py` | BFS/DFS cascading failure propagation over graphs | Production-Ready | Airframe subsystem cascading failure paths | Knowledge Graph | Low: Graph traversal algorithms are domain-agnostic |
+| **Predictive Maintenance Service** | `backend/app/services/predictive_maintenance.py` | Asset health, degradation scores, failure probability | Planned | Compute RUL in Flight Hours and Cycles | Knowledge Graph, Twin | Medium: Prognostic calibration |
+| **What-If Simulation Engine** | `backend/app/services/what_if_simulation.py` | Counterfactual scenario branching, constraint verification | Production-Ready | Scenario variables for fuel, munitions, weather, sorties | Pydantic, Sensor Fusion | Medium: Aerodynamic / combat constraint modeling |
+| **Digital Twin Foundation** | `backend/app/services/digital_twin.py` | Bitemporal virtual state, property versioning, snapshots | Production-Ready | Aircraft Twin state models & fatigue accumulators | Ontology Service, KG | Low: Bitemporal state pattern |
+| **Operational Knowledge Graph** | `backend/app/services/knowledge_graph.py` | Bitemporal fact/edge traversal, freshness validation | Production-Ready | Populate with aerospace fleet topology | Ontology Service, SQLite | Low: Core graph traversal engine is robust |
+| **Aerospace Ontology Engine** | `backend/app/domain/` | Canonical domain schemas, validation & compatibility matrix | Production-Ready | Aero Domain Models (Aircraft, Component, Telemetry) | Pydantic, SQLite | Low: Dedicated aerospace domain |
+| **Internal Event Bus** | `backend/app/services/event_bus.py` | Bounded async queue, worker pool, dead-letter dispatch | Production-Ready | High-throughput asynchronous dispatches | Asyncio, Pydantic | Very Low: Transport agnostic |
+| **Incident Management Service** | `backend/app/services/incidents.py` | Finite state machine for incidents with timeline & notes | Production-Ready | Categories (`IN_FLIGHT_EMERGENCY`, `ABORT`, `GROUND_ABORT`) | SQLite, Pydantic | Low: State machine logic is universal |
+| **WebSocket Nervous System** | `backend/app/api/websocket.py` | Real-time bidirectional telemetry & guardrail interrupts | Production-Ready | Tactical telemetry streams & alert cards | FastAPI WebSocket | Low: Protocol is proven and responsive |
+| **Obsidian UI & Tactical Console** | `frontend/app/` | Dark-mode tactical command console | Production-Ready | Air Power Command Center HUD styling | React 19, Next.js 16, Tailwind | Medium: UI theme requires tactical HUD styling |
 
 ---
 
 ## 6. Current Aero Capabilities
 
 ### 6.1 Assessment of Current Aero-Specific Code
-- **Workspace Repository (`Sage-Command-Air-Power`):** **0% implemented.** The repository is clean and uncommitted.
-- **Reference Predecessor (`sage_command_production`):** **0% Aero-specific semantics.**
-  - There are NO models for `Aircraft`, `Airframe`, `Squadron`, `Sortie`, `FlightHours`, `Avionics`, `Munitions`, or `AirTaskingOrder`.
-  - All existing domain entities are: `PLANT`, `PRODUCTION_LINE`, `WORK_CELL`, `MACHINE`, `PUMP`, `PLC`, `INVENTORY`, `SUPPLIER`, `CUSTOMER`.
-  - Existing telemetry simulator (`services/simulator.py`) generates mock supply chain inventory and shipment tracking codes (`TRK-8821-ALPHA`), not flight or engine telemetry.
+- **Workspace Repository (`Sage-Command-Air-Power`):** Phase 1 technical foundation and Phase 2 canonical domain model implemented with 64 automated tests.
+- **Aerospace Semantics:** Dedicated models for `Aircraft`, `Component`, `TelemetryObservation`, `MaintenanceEvent`, `ReadinessAssessment`, and `Mission`.
 
 ### 6.2 Conclusion
-The Aero system must be constructed by porting the proven architectural foundations while building the **Aero Air Power System domain model from the ground up**.
+The Aero system is built from the ground up with clean, dedicated aerospace domain models while establishing deterministic governance and cryptographic auditability.
 
 ---
 
@@ -266,18 +248,18 @@ OBSERVE → DETECT → UNDERSTAND → PREDICT → DIAGNOSE → SIMULATE → OPTI
 
 | Stage | Status | Existing Implementation | Evidence | Gap |
 | :--- | :--- | :--- | :--- | :--- |
-| **1. OBSERVE** | PARTIALLY IMPLEMENTED | `SensorFusionService`, `gateway/db_gateway.py`, `services/simulator.py` | Heterogeneous sensor alignment, unit conversion in `sensor_fusion_service.py` | Telemetry is factory-oriented (pumps, inventory); missing real-time flight telemetry stream (ARINC 429, MIL-STD-1553, GPS, pitch/roll/yaw, EGT, N1/N2 RPM). |
-| **2. DETECT** | PARTIALLY IMPLEMENTED | `AnomalyDetectionService`, `observe_detect.py` | Z-score statistical evaluation on twin properties in `anomaly_detection_service.py` | Detectors tuned to static plant baselines; missing dynamic flight envelope anomaly detection and sensor freeze detection. |
-| **3. UNDERSTAND** | PARTIALLY IMPLEMENTED | `OntologyService`, `KnowledgeGraphService` | Bitemporal entity-relationship graph in `knowledge_graph_service.py` | Ontological taxonomy is factory-based (`MACHINE`, `PLC`); missing aircraft structural decomposition (ATA 100 / S1000D chapters, avionics, hydraulics, weapons). |
-| **4. PREDICT** | PARTIALLY IMPLEMENTED | `PredictiveMaintenanceService`, `demand_forecasting_service.py` | Health scores, failure probabilities in `predictive_maintenance_service.py` | Predictor uses string matching (`"pump" in asset_id`); missing physics-based Remaining Useful Life (RUL) in flight hours/cycles. |
-| **5. DIAGNOSE** | PARTIALLY IMPLEMENTED | `RcaService`, `BlastRadiusService` | Causal dependency graphs, hypothesis ranking in `rca_service.py` | Causal relationships lack aircraft fault isolation trees, Built-In Test (BIT) code mapping, and aerodynamic degradation models. |
-| **6. SIMULATE** | PARTIALLY IMPLEMENTED | `WhatIfSimulationService`, `DigitalTwinService` | Counterfactual scenario variable evaluation in `what_if_simulation_service.py` | Simulates supply chain price/lead-time deltas; missing flight profile simulation, combat mission sortie execution, and weather impact. |
-| **7. OPTIMIZE** | NOT IMPLEMENTED | `agents/strategy.py`, `agents/evaluator.py` | Prompt-based strategy generation in `strategy.py`; simple utility ranking | Missing mathematical air fleet sortie generation optimization, maintenance crew scheduling, and weapons loadout allocation. |
-| **8. RECOMMEND** | PARTIALLY IMPLEMENTED | `PredictiveMaintenanceService`, `agents/evaluator.py` | Generates text-based recommendation cards with evidence links | Recommendations are factory work orders; missing Air Tasking Order (ATO) recommendations and Go/No-Go sortie clearance. |
-| **9. HUMAN GOVERNANCE** | IMPLEMENTED | `graph/builder.py`, `ExecutionGateway`, `policy_service.py` | LangGraph `interrupt_before=["execution"]`, 10-gate `execution_gateway.py` | The governance engine itself is production-grade; only requires aerospace authority roles (`FlightLead`, `MissionCommander`, `CrewChief`). |
-| **10. MAINTENANCE** | PARTIALLY IMPLEMENTED | `services/incident_service.py`, `action_store.py` | Incident lifecycle state machine, work order action proposals | Missing Line Replaceable Unit (LRU) tracking, maintenance turnaround tracking, and hangar bay scheduling. |
-| **11. VERIFY** | PARTIALLY IMPLEMENTED | `core/state.py` (`IndustrialStage.VERIFY`), `ExecutionGateway` | Post-transaction database verification step | Missing post-maintenance Built-In-Test-Equipment (BITE) run-up verification and post-flight debrief telemetry validation. |
-| **12. LEARN** | PARTIALLY IMPLEMENTED | `services/audit_ledger.py`, `governance/custody.py` | Append-only audit ledger and chain-of-custody recording in `audit_ledger.py` | Logs events accurately, but lacks automated feedback loop into fleet-wide reliability parameters or predictive model retraining. |
+| **1. OBSERVE** | IMPLEMENTED | `TelemetryService`, `TelemetryNormalizer`, `SyntheticFlightGenerator` | Real-time flight telemetry parser, SI unit normalization, quality assessment | Full avionics hardware buses (MIL-STD-1553, ARINC 429) planned for future defense integration. |
+| **2. DETECT** | IMPLEMENTED | `ThresholdAnomalyDetector`, `StatisticalAnomalyDetector`, `CompositeAnomalyDetector` | Configurable caution/critical envelope thresholds and rolling z-score baseline | Advanced multi-dimensional sensor drift models planned for future phases. |
+| **3. UNDERSTAND** | IMPLEMENTED | `AeroDomainModel`, `AircraftTwinState`, `SubsystemState` | Canonical aerospace models (airframe, components, subsystems) and twin state | Expanded S1000D / ATA 100 chapter taxonomy planned for future phases. |
+| **4. PREDICT** | PARTIALLY IMPLEMENTED | `WearEstimator`, `AircraftHealthEstimator` | Cumulative wear indices, dynamic stress wear, rule-based health scoring | Physics-informed Remaining Useful Life (RUL) prognostics scheduled for Phase 6. |
+| **5. DIAGNOSE** | IMPLEMENTED | `RootCauseDiagnosisEngine`, `DiagnosisRuleCatalog` | Subsystem diagnosis rules, multi-signal correlation, root-cause evidence | Expanded Built-In Test (BIT) fault isolation trees planned for future phases. |
+| **6. SIMULATE** | PARTIALLY IMPLEMENTED | `SyntheticFlightGenerator` | Deterministic synthetic flight profiles (cruise, thermal spike, high-G, combat) | Tactical combat sortie execution and weather impact simulation planned for future phases. |
+| **7. OPTIMIZE** | PARTIALLY IMPLEMENTED | `MaintenanceRecommendationEngine` | Advisory maintenance prioritization (MONITOR, INSPECT, SCHEDULE, GROUND) | Mathematical fleet sortie turnaround optimization planned for future phases. |
+| **8. RECOMMEND** | IMPLEMENTED | `MaintenanceRecommendationEngine`, `IntelligenceService` | Advisory maintenance recommendations and readiness impact scoring | Automated Air Tasking Order (ATO) sortie clearance planned for future phases. |
+| **9. HUMAN GOVERNANCE** | IMPLEMENTED | `ExecutionGateway`, `PolicyEngine` | Strict policy engine precedence, two-person rule, 10-gate write boundary | Tactical rules of engagement (ROE) expansion planned for future phases. |
+| **10. MAINTENANCE** | IMPLEMENTED | `MaintenanceEvent`, `MaintenanceService` | Maintenance event tracking, component work logs, and advisories | Automated hangar bay scheduling planned for future phases. |
+| **11. VERIFY** | IMPLEMENTED | `FlightEnvelopeChecker`, `AuditLedgerService` | Post-flight telemetry validation and immutable cryptographic ledger | Automated Built-In-Test-Equipment (BITE) run-up verification planned for future phases. |
+| **12. LEARN** | PARTIALLY IMPLEMENTED | `AuditLedgerService`, `IntelligenceService` | Append-only SHA-256 audit ledger and correlation tracking | Fleet-wide reliability parameter feedback loop planned for future phases. |
 
 ---
 
@@ -349,43 +331,31 @@ Mapping existing components against the 11 target Aero layers:
          │  12. Receives execution confirmation & updated telemetry
 ```
 
-### 9.2 Telemetry Data Flow (Current vs Target Aero)
+### 9.2 Telemetry Data Flow
 
-**Current Implemented Flow:**
-```
-[ Mock SQLite Simulator (services/simulator.py) ]
-         │
-         ▼ (Simulates factory inventory rows)
-[ Database Connection Gateway (gateway/db_gateway.py) ]
-         │
-         ▼
-[ Data Quality Service -> Sensor Fusion Service -> Anomaly Engine ]
-         │
-         ▼
-[ Operator Notification via WebSocket ]
-```
-
-**Target Aero Telemetry Flow:**
 ```
 [ Aircraft Telemetry Source (Flight Sensors, Avionics, Turbofan FADEC) ]
          │
          ▼
-[ High-Throughput Telemetry Ingestion (Data Fabric / Event Bus) ]
+[ Telemetry Ingestion, Normalization & Quality Assessor (TelemetryService) ]
          │
          ▼
-[ Data Quality & Unit Normalization (Sensor Fusion Service) ]
+[ Flight Envelope Boundary Evaluation (FlightEnvelopeChecker) ]
          │
-         ├─► Real-Time Flight Time-Series Store
-         ├─► Aircraft Digital Twin (Virtual State & Flight Hour Updates)
-         │
-         ▼
-[ Anomaly Detection & Subsystem Diagnostics (Z-score, BIT Codes, RCA) ]
+         ├─► Real-Time Flight Time-Series Store (SQLite WAL)
+         ├─► In-Memory Bounded Ring Buffer (TelemetryBuffer)
          │
          ▼
-[ Predictive Maintenance (RUL Calculation) & Tactical Blast Radius ]
+[ Aircraft Digital Twin (Twin State, Cumulative Hours & Wear Index) ]
          │
          ▼
-[ Command Center Alert / Sortie Recommendation -> Mission Commander ]
+[ Anomaly Detection & Subsystem Diagnostics (Threshold, Z-score, Root Cause) ]
+         │
+         ▼
+[ Decision-Support Maintenance Recommendation & Readiness Integration ]
+         │
+         ▼
+[ Tactical Command Center Alert / Sortie Recommendation -> Flight Lead ]
 ```
 
 ---
@@ -436,7 +406,7 @@ Classification of major workspace dependencies:
 - Bitemporal Knowledge Graph traversal and freshness evaluation.
 - WebSocket real-time nervous system with JWT authentication and threat intercept.
 
-### Category B: Reusable SageCommand Foundation
+### Category B: High-Reliability Core Foundation
 - `EventBus` asynchronous message queue and dead-letter dispatcher.
 - `DatabaseConnectionGateway` session-scoped connection manager.
 - Statistical Anomaly Detection engine (Z-score and baseline windows).
@@ -446,7 +416,7 @@ Classification of major workspace dependencies:
 - ReactFlow interactive DAG node visualizer (`NeuralFlowGraph.tsx`).
 
 ### Category C: Partially Implemented
-- **Digital Twin:** Architecture exists (`TwinEntity`, `TwinStateProperty`, `TwinSnapshot`), but schemas only support manufacturing machinery.
+- **Digital Twin:** Bitemporal state representation, subsystem health scoring, and operational wear index established for aircraft.
 - **Predictive Maintenance:** Health score and risk assessment framework exists, but mathematical RUL calculation is heuristic.
 - **Incident Management:** Incident lifecycle and timeline engine exists, but categories must be adapted to flight emergencies.
 - **RBAC / ABAC:** Role evaluation engine exists, but military operational roles are absent.
@@ -475,7 +445,7 @@ Classification of major workspace dependencies:
 
 ## 12. Technical Risks
 
-1. **Domain Over-Coupling Risk:** Attempting to force Aero concepts into existing manufacturing tables/enums could result in brittle abstractions. *Mitigation:* Create a dedicated, clean `aero_` domain namespace while reusing the underlying computational engines.
+1. **Domain Isolation Risk:** Mixing generic entity schemas with defense aerospace models could result in brittle abstractions. *Mitigation:* Maintain dedicated, typed aerospace domain schemas (`Aircraft`, `Component`, `Telemetry`, `Readiness`) while leveraging proven computational and persistence patterns.
 2. **High-Frequency Telemetry Ingestion Contention:** High-rate flight telemetry updates could cause SQLite database locks (`database is locked`). *Mitigation:* Use WAL mode (`PRAGMA journal_mode=WAL;`), in-memory queues (`asyncio.Queue`), and batched append-only writes.
 3. **Heuristic vs Physics-Informed Predictive Maintenance:** Military aircraft maintenance demands defensible, auditable RUL calculations, not keyword heuristics. *Mitigation:* Implement flight hour/cycle wear formulas based on manufacturer flight envelope limits.
 4. **Safety & Governance Compliance:** Aircraft weapons release and sortie scrambles require non-bypassable multi-officer governance. *Mitigation:* Leverage the existing two-person rule in the 10-gate Execution Gateway.

@@ -24,6 +24,9 @@ from app.core.exceptions import AeroException
 from app.contracts.base import ApiErrorResponse, ApiErrorDetail, utc_now_iso
 from app.db.database import init_db, close_db
 from app.api.routes.health import router as health_router
+from app.api.routes.aircraft import router as aircraft_router
+from app.api.routes.missions import router as missions_router
+from app.api.routes.telemetry import router as telemetry_router
 
 logger = get_logger("app.main")
 
@@ -31,7 +34,7 @@ logger = get_logger("app.main")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Clean asynchronous application startup and shutdown lifecycle management."""
-    settings = get_settings()
+    settings = getattr(app.state, "settings", None) or get_settings()
 
     # 1. Initialize structured logging
     setup_logging(settings)
@@ -68,6 +71,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         openapi_url="/openapi.json" if not resolved_settings.is_production else None,
         lifespan=lifespan,
     )
+    app.state.settings = resolved_settings
 
     # -------------------------------------------------------------------------
     # Middleware: Request Correlation Tracing
@@ -178,6 +182,9 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
 
     # Versioned API routes under /api/v1
     app.include_router(health_router, prefix=resolved_settings.API_PREFIX)
+    app.include_router(aircraft_router, prefix=resolved_settings.API_PREFIX)
+    app.include_router(missions_router, prefix=resolved_settings.API_PREFIX)
+    app.include_router(telemetry_router, prefix=resolved_settings.API_PREFIX)
 
     @app.get("/", tags=["Root"])
     async def get_root():

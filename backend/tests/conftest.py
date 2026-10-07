@@ -9,6 +9,7 @@ import pytest
 from typing import Generator
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker, Session
 
 # Ensure backend root is on sys.path
@@ -17,7 +18,8 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 from app.core.config import Settings
-from app.db.database import Base, init_db, close_db
+from app.db.database import Base, get_db
+import app.db.models  # Ensure all models are registered on Base.metadata
 from app.main import create_app
 
 
@@ -38,10 +40,11 @@ def test_settings() -> Settings:
 
 @pytest.fixture
 def db_session(test_settings: Settings) -> Generator[Session, None, None]:
-    """Provides isolated test database session per test."""
+    """Provides isolated test database session per test using StaticPool."""
     engine = create_engine(
-        test_settings.DATABASE_URL,
+        "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
     Base.metadata.create_all(bind=engine)
     session_factory = sessionmaker(bind=engine, autocommit=False, autoflush=False)
@@ -56,8 +59,10 @@ def db_session(test_settings: Settings) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def test_client(test_settings: Settings) -> Generator[TestClient, None, None]:
-    """Provides TestClient with managed lifespan execution."""
+def test_client(test_settings: Settings, db_session: Session) -> Generator[TestClient, None, None]:
+    """Provides TestClient with managed lifespan execution and isolated db session."""
     app = create_app(settings=test_settings)
+    app.dependency_overrides[get_db] = lambda: db_session
     with TestClient(app) as client:
         yield client
+    app.dependency_overrides.clear()

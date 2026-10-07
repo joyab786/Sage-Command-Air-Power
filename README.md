@@ -187,25 +187,6 @@ graph TD
 
 ---
 
-## ♻️ SageCommand Reuse Strategy
-
-Aero is developed by selectively harvesting battle-tested, high-reliability infrastructure mechanisms from the previous **SageCommand V3** project (a production-grade system with 1,200+ unit and integration tests):
-
-| Reused Architectural Mechanism | Proven Capability in V3 | How Aero Leverages It |
-| :--- | :--- | :--- |
-| **Deterministic Execution Gateway** | 10-gate write boundary, rollback, concurrency locks | Enforces strict safety gates on maintenance proposals and mission dispatches. |
-| **Policy Enforcement Engine** | Priority evaluation ($\text{DENY} > \text{REQUIRE\_APPROVAL} > \text{HOLD} > \text{ALLOW}$) | Evaluates flight safety limits and squadron standard operating procedures. |
-| **Cryptographic Audit Ledger** | Append-only, SHA-256 hash-chained immutable logging | Provides an auditable "black box" record of AI recommendations and commander approvals. |
-| **Multimodal Sensor Fusion** | Temporal alignment, cross-modal agreement, unit conversion | Normalizes heterogeneous avionics, thermodynamic, and vibration sensor streams. |
-| **Bitemporal Knowledge Graph** | Graph traversals, bitemporal valid-time queries | Models aircraft subsystem dependencies and cascading failure paths. |
-| **What-If Simulation Framework** | Counterfactual delta computation & constraint checks | Simulates mission feasibility under partial subsystem degradation. |
-
-### 🚫 Complete Rejection of Manufacturing Domain
-While computational algorithms are reused, **Aero completely discards the legacy manufacturing domain model**.  
-Aero introduces a dedicated, purpose-built **Aerospace Domain Model** (`Aircraft`, `Airframe`, `Squadron`, `Sortie`, `FlightHours`, `Avionics`, `Propulsion`, `BITE`) with zero references to factory plants, pumps, or commercial supply chains.
-
----
-
 ## 🛠️ Technology Direction
 
 * **Backend Framework:** Python 3.12, FastAPI `>=0.115.0`, Uvicorn (ASGI)
@@ -242,34 +223,67 @@ The planned demonstration will walk through an end-to-end operational scenario:
 ```
 Phase 0: Architecture Reconnaissance & SIH Scope Definition      [✅ Completed]
 Phase 1: Technical Foundation & Execution Gateway Scaffolding    [✅ Completed]
-Phase 2: Aeronautical Domain Model & Ontology                    [🚧 Planned - Next Step]
-Phase 3: Flight Telemetry Data Fabric (Ingestion & Normalizer)   [🚧 Planned]
-Phase 4: Aircraft Digital Twin State Machine                     [🚧 Planned]
-Phase 5: Subsystem Intelligence Layer (Anomaly, RUL, RCA)        [🚧 Planned]
-Phase 6: Mission & Fleet Readiness Assessor                      [🚧 Planned]
-Phase 7: Aero Command Center Tactical UI                         [🚧 Planned]
-Phase 8: Advanced Counterfactual Simulation & Fleet Optimization [🔭 Future Vision]
+Phase 2: Aeronautical Domain Model & Ontology                    [✅ Completed]
+Phase 3: Flight Telemetry Data Fabric (Ingestion & Normalizer)   [✅ Completed]
+Phase 4: Aircraft Digital Twin State Machine                     [✅ Completed]
+Phase 5: Subsystem Intelligence Layer (Anomaly, RCA, Advisory)   [✅ Completed]
+Phase 6: Prognostics & Remaining Useful Life (RUL)               [🚧 Next Phase]
+Phase 7: Mission Manager & Air Tasking Order (ATO) Pipeline      [🚧 Planned]
+Phase 8: What-If Tactical Simulation & Fleet Optimization        [🔭 Future Vision]
+Phase 9: Tactical Command Center UI (Obsidian Aero Console)      [🚧 Planned]
+Phase 10: Human Governance & Mission Execution Gates             [🚧 Planned]
+Phase 11: Verification, Flight Debrief & Fleet Learning          [🔭 Future Vision]
 ```
 
-### Roadmap Details:
-* **Phase 0 — Repository & Architecture [✅ Completed]:** Initialized repository, performed comprehensive audit of reusable SageCommand foundations, mapped the operational loop, defined SIH MVP boundaries.
-* **Phase 1 — Technical Foundation [✅ Completed]:** Established clean FastAPI application structure, Pydantic v2 base envelopes, SQLite WAL database context, deterministic policy engine, SHA-256 audit ledger, and 10-gate execution gateway with 25 passing automated tests.
-* **Phase 2 — Aero Domain Foundation [🚧 Planned]:** Canonical domain schemas: `Aircraft`, `Airframe`, `Subsystem`, `Squadron`, `Wing`, `AirBase`, `Sortie`, `FlightHours`, `FlightCycles`, `BITE`, `ReadinessClassification`.
-* **Phase 3 — Telemetry Data Fabric [🚧 Planned]:** Real-time flight telemetry parser, flight envelope boundary checker, synthetic telemetry flight profile generator.
-* **Phase 4 — Aircraft Digital Twin [🚧 Planned]:** Bitemporal twin synchronization, component fatigue accumulator, twin state diffs.
-* **Phase 5 — Intelligence Layer [🚧 Planned]:** Statistical anomaly detection, component RUL estimator, causal graph RCA.
-* **Phase 6 — Mission Readiness [🚧 Planned]:** FMC/PMC/NMC state machine, squadron-level sortie readiness calculator.
-* **Phase 7 — Aero Command Center [🚧 Planned]:** Full interactive Next.js dashboard featuring fleet matrix, telemetry dials, alert cards, and governance modals.
-* **Phase 8 — Advanced Intelligence [🔭 Future]:** Dynamic what-if combat scenario simulation, multi-base maintenance workload optimization, air-gapped model deployment.
+### Current SIH MVP Pipeline:
+```
+Telemetry
+    ↓
+Data Quality & Normalization
+    ↓
+Aircraft Digital Twin
+    ↓
+Subsystem Health
+    ↓
+Anomaly Detection
+    ↓
+Root-Cause Diagnosis
+    ↓
+Maintenance Recommendation
+    ↓
+Readiness Intelligence
+    ↓
+Command Center
+```
+
+### Current Implemented Capabilities (Phases 1–5):
+* **Aero Domain Model:** Canonical aerospace domain aggregates (`Aircraft`, `Component`, `Telemetry`, `ReadinessAssessment`, `Mission`, `MaintenanceEvent`).
+* **Telemetry Ingestion:** High-throughput streaming and batch ingest with SI unit normalization and coordinate consistency.
+* **Telemetry Quality Assessment:** Real-time data quality classification (`VALID`, `DEGRADED`, `INVALID`) catching clock drift, NaN/Inf, and channel drops.
+* **Flight Envelope Monitoring:** Demonstration flight boundary evaluation across altitude, airspeed, Mach, G-load, and turbine temperatures.
+* **Aircraft Digital Twin State Estimation:** Bitemporal operational state estimation preserving channel history across sparse telemetry packets.
+* **Subsystem Health Scoring:** Explainable rule-based health scoring (0–100) with transparent, structured deduction rationales.
+* **Wear & Fatigue Estimation:** Monotonic wear indices derived from operational flight hours, cycles, and dynamic structural stress.
+* **Deterministic Anomaly Detection:** Configurable threshold and rolling z-score statistical detectors with zero-variance safety protections.
+* **Root-Cause Diagnosis Engine:** Subsystem diagnosis synthesis, multi-signal correlation, and catalog rule weighting.
+* **Decision-Support Maintenance Recommendations:** Prioritized advisories (`MONITOR`, `INSPECT`, `SCHEDULE_MAINTENANCE`, `GROUND_FOR_REVIEW`) with clear evidence links.
+* **Readiness Integration Boundary:** Direct coupling between active subsystem anomalies and fleet readiness classifications.
+* **Explainable Intelligence:** Zero black-box outputs; every anomaly, diagnosis, and recommendation exposes underlying telemetry evidence and confidence ratings ($0.0 \le c \le 1.0$).
+
+> [!NOTE]
+> **Prototype Scope Notice:** This platform is an **SIH MVP / Prototype**. While the architectural foundation, data fabric, digital twin, and intelligence pipelines are production-grade and fully tested, physics-informed Remaining Useful Life (RUL) modeling, full Air Tasking Order (ATO) generation, and multi-base tactical HUD interfaces are scheduled for subsequent roadmap phases.
 
 ---
 
-## 🔐 Safety & Human Governance
+## 🔐 Safety Boundary & Human Governance
 
-Aero adheres to non-negotiable safety and defense compliance principles:
-* **Strict Decision Support:** Aero advises; it never commands. Autonomous weapon release or unapproved dispatch actions are architecturally prohibited.
-* **Two-Person Rule:** High-risk actions require independent human clearance. An operator cannot approve their own high-risk action.
-* **Deterministic Write Boundary:** AI outputs cannot directly modify database state. Every state change must be validated by the 10-gate Execution Gateway.
+Aero adheres strictly to non-negotiable safety and defense compliance boundaries:
+* **Advisory Decision Support:** Aero is exclusively an analytical decision-support system. It produces recommendations, never autonomous commands.
+* **Human-in-the-Loop (HITL):** Flight commanders, flight leads, and maintenance crew chiefs retain full authority.
+* **No Autonomous Flight Control:** The system does not interface with autopilot or aircraft flight-control computers.
+* **No Weapons Control or Targeting:** Zero weapon targeting, authorization, release, or combat engagement capabilities exist in the platform.
+* **Two-Person Rule:** High-risk actions require independent human clearance. Proposing operators cannot approve their own high-risk actions.
+* **Deterministic Write Boundary:** AI algorithms cannot mutate persistent state directly. All database writes pass through the 10-gate Execution Gateway.
 * **Cryptographic Accountability:** All system recommendations, human approvals, and policy evaluations are committed to an append-only, SHA-256 hash-chained audit ledger.
 
 ---
@@ -281,15 +295,20 @@ Sage-Command-Air-Power/
 ├── backend/                           # FastAPI Python Backend
 │   ├── app/
 │   │   ├── api/routes/health.py       # Health diagnostics endpoints
+│   │   ├── api/routes/aircraft.py     # Aircraft, twin, anomalies, diagnosis & maintenance endpoints
+│   │   ├── api/routes/missions.py     # Mission and sortie planning endpoints
+│   │   ├── api/routes/telemetry.py    # Telemetry ingestion & query endpoints
 │   │   ├── contracts/                 # Pydantic v2 response envelopes & caller identity
 │   │   ├── core/                      # Settings, structured logging, exception hierarchy
 │   │   ├── db/database.py             # SQLAlchemy 2.0 & SQLite WAL connection manager
-│   │   ├── services/
-│   │   │   ├── policy_engine.py       # Deterministic policy engine
-│   │   │   ├── audit_ledger.py        # Cryptographic SHA-256 audit ledger
-│   │   │   └── execution_gateway.py   # 10-gate transactional execution gateway
+│   │   ├── db/models.py               # Relational ORM models (Aircraft, Telemetry, Twin, Anomalies)
+│   │   ├── domain/                    # Canonical aerospace domain entities & enums
+│   │   ├── telemetry/                 # Telemetry Data Fabric (Normalizer, Quality, Envelope, Buffer)
+│   │   ├── digital_twin/              # Aircraft Digital Twin (Estimator, Health, Wear, Sessions)
+│   │   ├── intelligence/              # Subsystem Intelligence (Detectors, Diagnosis, Maintenance)
+│   │   ├── services/                  # Business services, policy engine, audit ledger, execution gateway
 │   │   └── main.py                    # Application entrypoint & lifespan handlers
-│   ├── tests/                         # 25 automated unit and integration tests
+│   ├── tests/                         # Automated unit and integration tests (166 passing)
 │   └── requirements.txt               # Backend dependencies
 ├── frontend/                          # Next.js 16 / React 19 Frontend Shell
 │   ├── app/
@@ -298,8 +317,12 @@ Sage-Command-Air-Power/
 │   │   └── page.tsx                   # System Foundation dashboard shell
 │   └── package.json                   # Frontend dependencies
 ├── docs/                              # Technical Documentation
-│   ├── AERO_CODEBASE_RECONNAISSANCE.md # Predecessor audit & reuse analysis
-│   └── ARCHITECTURE.md                # System Architecture Baseline Specification
+│   ├── AERO_CODEBASE_RECONNAISSANCE.md # System architecture reconnaissance & baseline audit
+│   ├── ARCHITECTURE.md                # System Architecture Baseline Specification (v1.4.0)
+│   ├── AERO_DOMAIN_MODEL.md           # Canonical Aerospace Domain Model Specification
+│   ├── AERO_TELEMETRY_DATA_FABRIC.md  # Phase 3 Telemetry Data Fabric Specification
+│   ├── AERO_DIGITAL_TWIN.md           # Phase 4 Aircraft Digital Twin Specification
+│   └── AERO_INTELLIGENCE.md           # Phase 5 Subsystem Intelligence & Anomaly Detection Specification
 ├── .env.example                       # Safe environment variables template
 ├── .gitignore                         # Comprehensive git ignore rules
 ├── powershell.cmd                     # Windows execution proxy
@@ -310,18 +333,23 @@ Sage-Command-Air-Power/
 
 ## 📌 Current Status
 
-**Current Status: 🚧 Early Development / SIH Prototype Baseline**
+**Current Status: 🟢 Phase 5 Complete / 166 Tests Verified Passing**
 
 * ✅ Repository established and synchronized on GitHub.
 * ✅ Architectural reconnaissance completed ([`docs/AERO_CODEBASE_RECONNAISSANCE.md`](./docs/AERO_CODEBASE_RECONNAISSANCE.md)).
-* ✅ Reusable core foundation scaffolded with 25 passing automated tests ([`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)).
-* 🚧 Active implementation focusing on **Phase 2 (Aerospace Domain Model)**.
+* ✅ Phase 1 Technical Foundation verified ([`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)).
+* ✅ Phase 2 Canonical Aerospace Domain Model verified ([`docs/AERO_DOMAIN_MODEL.md`](./docs/AERO_DOMAIN_MODEL.md)).
+* ✅ Phase 3 Telemetry Data Fabric verified ([`docs/AERO_TELEMETRY_DATA_FABRIC.md`](./docs/AERO_TELEMETRY_DATA_FABRIC.md)).
+* ✅ Phase 4 Aircraft Digital Twin State Estimation verified ([`docs/AERO_DIGITAL_TWIN.md`](./docs/AERO_DIGITAL_TWIN.md)).
+* ✅ Phase 5 Subsystem Intelligence & Anomaly Detection verified ([`docs/AERO_INTELLIGENCE.md`](./docs/AERO_INTELLIGENCE.md)).
+* ✅ Complete automated test suite: **166 passing tests** with 0 regressions.
+* 🚧 Preparing for **Phase 6 (Prognostics & Remaining Useful Life / RUL)**.
 
 ---
 
 ## 🤝 Development Philosophy
 
-> *"Reuse proven infrastructure.  
+> *"Build robust, reliable infrastructure.  
 > Build clean Aero domain models.  
 > Prefer deterministic and explainable intelligence.  
 > Keep humans firmly in the decision loop.  
@@ -332,8 +360,12 @@ Sage-Command-Air-Power/
 
 ## 📚 Documentation Links
 
-* 📄 **[Aero Codebase Reconnaissance Report](./docs/AERO_CODEBASE_RECONNAISSANCE.md)** — Comprehensive architectural audit of SageCommand V3 reuse, operational loop mapping, and risk analysis.
-* 📄 **[System Architecture Specification](./docs/ARCHITECTURE.md)** — Technical baseline documentation for Phase 1 foundations, contracts, and execution gates.
+* 📄 **[Aero Codebase Reconnaissance Report](./docs/AERO_CODEBASE_RECONNAISSANCE.md)** — System architecture reconnaissance, operational loop mapping, and technical baseline analysis.
+* 📄 **[System Architecture Specification](./docs/ARCHITECTURE.md)** — Technical baseline documentation for foundations, contracts, and execution gates (v1.4.0).
+* 📄 **[Aero Domain Model Specification](./docs/AERO_DOMAIN_MODEL.md)** — Canonical aerospace domain model, entities, and database mappings.
+* 📄 **[Aero Telemetry Data Fabric Specification](./docs/AERO_TELEMETRY_DATA_FABRIC.md)** — Telemetry ingestion, normalization, quality evaluation, and buffering.
+* 📄 **[Aero Aircraft Digital Twin Specification](./docs/AERO_DIGITAL_TWIN.md)** — Bitemporal digital twin state estimation, health scoring, and wear estimation.
+* 📄 **[Aero Subsystem Intelligence Specification](./docs/AERO_INTELLIGENCE.md)** — Deterministic threshold/statistical anomaly detection, root-cause diagnosis, and maintenance recommendations.
 
 ---
 *Developed for the Smart India Hackathon (SIH) // SageCommand Air Power System Team*

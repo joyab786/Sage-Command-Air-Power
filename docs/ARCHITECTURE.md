@@ -1,8 +1,8 @@
 # SageCommand Air Power System (Aero) — System Architecture
-**Phase 1: Foundation Baseline Specification**  
-*Document Version:* 1.0.0  
+**Phase 5: Subsystem Intelligence & Anomaly Detection (SIH MVP) Specification**  
+*Document Version:* 1.4.0  
 *Date:* 2026-10-06  
-*Status:* IMPLEMENTED BASELINE  
+*Status:* IMPLEMENTED BASELINE (Phases 1-5 Verified: 166 Passing Automated Tests)  
 
 ---
 
@@ -10,12 +10,15 @@
 
 The **SageCommand Air Power System (Aero)** is designed as an autonomous command, decision-support, and governance platform for military air operations. The architecture strictly follows these foundational principles:
 
-1. **Clean Domain Separation:** The previous SageCommand system was tailored to discrete manufacturing and commercial supply chains (`PLANT`, `MACHINE`, `PUMP`, `INVENTORY`, `SUPPLIER`). Aero rejects all manufacturing domain concepts. Core mechanisms are adapted into a domain-neutral foundation before introducing aerospace entities.
+1. **Aerospace Domain Modeling:** Aero establishes a purpose-built aerospace domain foundation. Core mechanisms are constructed on a clean, domain-neutral foundation tailored specifically for defense aviation operational intelligence.
 2. **Deterministic Governance Over LLM Output:** Large Language Models and AI agents generate hypotheses, strategies, and advisory intelligence. However, **deterministic systems enforce rules**. Write actions must pass through strict policy engines and execution gates.
 3. **Decoupled Analytical vs. Execution Planes:** Analytical intelligence (telemetry fusion, anomaly detection, predictive maintenance, simulation) is strictly read-only. Analytical modules have zero authority to perform physical or operational mutations.
 4. **Append-Only Tamper-Evident Auditability:** Every decision, policy evaluation, and operational action is recorded in a cryptographically chained SHA-256 audit ledger.
 5. **Two-Person Rule for High-Risk Actions:** High-risk actions require independent human approval. The proposing actor is barred from approving their own high-risk actions.
 6. **High-Concurrency Telemetry Preparation:** The database foundation is configured with SQLite Write-Ahead Logging (WAL) mode and asynchronous queues to support high-rate aircraft sensor streams.
+7. **Clean Telemetry Data Fabric:** Ingest, normalize, validate, and buffer flight telemetry deterministically before state estimation or persistence.
+8. **Explainable Digital Twin State Estimation:** Continuous operational representation with memory retention, rule-based health scoring, and transparent reasons.
+9. **Explainable Subsystem Intelligence:** Deterministic threshold and statistical anomaly detection, correlation/deduplication windows, multi-signal root-cause synthesis, and advisory maintenance recommendations.
 
 ---
 
@@ -38,32 +41,60 @@ Sage-Command-Air-Power/
 │   │   │   └── common.py             # ActorIdentity, DataMode, RiskLevel, Pagination
 │   │   ├── db/
 │   │   │   ├── __init__.py           # Database exports
-│   │   │   └── database.py           # SQLAlchemy engine, sessions, and SQLite WAL pragma
+│   │   │   ├── database.py           # SQLAlchemy engine, sessions, and SQLite WAL pragma
+│   │   │   └── models.py             # SQLAlchemy ORM models (Aircraft, Telemetry, Twin, Sessions)
+│   │   ├── domain/                   # Canonical Aerospace Domain Layer (Phase 2)
+│   │   │   ├── __init__.py           # Domain exports
+│   │   │   ├── enums.py              # Domain enums (Readiness, AircraftType, Subsystems)
+│   │   │   ├── aircraft.py           # Aircraft schemas & domain aggregates
+│   │   │   ├── components.py         # Component & subsystem tracking schemas
+│   │   │   ├── readiness.py          # Operational readiness assessment schemas
+│   │   │   ├── missions.py           # Sortie & mission lifecycle schemas
+│   │   │   ├── maintenance.py        # Maintenance log & work order schemas
+│   │   │   └── telemetry.py          # Telemetry observation base schemas
+│   │   ├── telemetry/                # Telemetry Data Fabric (Phase 3)
+│   │   │   ├── __init__.py           # Telemetry exports
+│   │   │   ├── models.py             # NormalizedTelemetry, IngestResult, Quality/Envelope schemas
+│   │   │   ├── normalizer.py         # TelemetryNormalizer (unit conversion & standardization)
+│   │   │   ├── quality.py            # QualityEvaluator (VALID / DEGRADED / INVALID)
+│   │   │   ├── envelope.py           # FlightEnvelopeChecker (generic demo envelope limits)
+│   │   │   ├── buffer.py             # Thread-safe in-memory TelemetryBuffer
+│   │   │   ├── generator.py          # SyntheticFlightGenerator (deterministic demo flight profiles)
+│   │   │   └── service.py            # TelemetryService orchestration layer
+│   │   ├── digital_twin/             # Aircraft Digital Twin State Estimation (Phase 4)
+│   │   │   ├── __init__.py           # Digital Twin exports
+│   │   │   ├── models.py             # AircraftTwinState, SubsystemState, HealthReason, FlightSession
+│   │   │   ├── estimator.py          # DigitalTwinEstimator (state fusion & channel memory)
+│   │   │   ├── health.py             # AircraftHealthEstimator (explainable rule-based scoring)
+│   │   │   ├── wear.py               # WearEstimator (normalized wear index & dynamic fatigue)
+│   │   │   └── service.py            # DigitalTwinService (lifecycle, sessions, hours/cycles)
+│   │   ├── intelligence/             # Subsystem Intelligence & Anomaly Detection (Phase 5)
+│   │   │   ├── __init__.py           # Intelligence package exports
+│   │   │   ├── models.py             # Strongly typed Anomaly, Diagnosis & Recommendation models
+│   │   │   ├── anomaly/              # Detectors (Threshold, Statistical z-score, Composite)
+│   │   │   ├── diagnosis/            # Root-cause synthesis & multi-signal correlation rules
+│   │   │   ├── maintenance.py        # Decision-support maintenance recommendation engine
+│   │   │   └── service.py            # IntelligenceService (correlation, deduplication & WAL)
 │   │   ├── api/
 │   │   │   ├── __init__.py           # API exports
 │   │   │   └── routes/
 │   │   │       ├── __init__.py       # Route exports
-│   │   │       └── health.py         # GET /health diagnostics endpoint
+│   │   │       ├── health.py         # GET /health diagnostics endpoint
+│   │   │       ├── aircraft.py       # Aircraft, twin, anomalies, diagnosis & maintenance endpoints
+│   │   │       ├── missions.py       # Mission & sortie management endpoints
+│   │   │       └── telemetry.py      # Telemetry ingestion & query endpoints
 │   │   ├── services/
 │   │   │   ├── __init__.py           # Services exports
 │   │   │   ├── policy_engine.py      # Deterministic policy engine (DENY > APPROVAL > HOLD > ALLOW)
 │   │   │   ├── audit_ledger.py       # Append-only cryptographic SHA-256 audit ledger
 │   │   │   └── execution_gateway.py  # 10-gate transactional write boundary & two-person rule
 │   │   └── graph/
-│   │       └── __init__.py           # Agent orchestration graph package (deferred to Phase 5)
+│   │       └── __init__.py           # Agent orchestration graph package (deferred to future phases)
 │   ├── tests/
 │   │   ├── __init__.py               # Test suite package
 │   │   ├── conftest.py               # Shared pytest fixtures (in-memory DB, TestClient)
-│   │   ├── unit/
-│   │   │   ├── test_config.py        # Configuration loading tests
-│   │   │   ├── test_contracts.py     # Base contract & envelope tests
-│   │   │   ├── test_database.py      # Database transaction commit & rollback tests
-│   │   │   ├── test_policy_engine.py # Policy precedence & anti-code injection tests
-│   │   │   ├── test_audit_ledger.py  # Audit append & tamper detection tests
-│   │   │   └── test_execution_gateway.py # Execution gates, two-person rule & rollback tests
-│   │   └── integration/
-│   │       ├── test_health_api.py    # GET /health & correlation header tests
-│   │       └── test_application_lifecycle.py # Startup & shutdown lifecycle tests
+│   │   ├── unit/                     # Unit test suites (125 tests)
+│   │   └── integration/              # Integration test suites (41 tests)
 │   └── requirements.txt              # Backend dependencies
 ├── frontend/
 │   ├── app/
@@ -77,7 +108,10 @@ Sage-Command-Air-Power/
 │   └── postcss.config.js             # PostCSS processing configuration
 ├── docs/
 │   ├── AERO_CODEBASE_RECONNAISSANCE.md # Initial architectural audit
-│   └── ARCHITECTURE.md               # This architectural specification document
+│   ├── ARCHITECTURE.md               # This architectural specification document
+│   ├── AERO_DOMAIN_MODEL.md          # Canonical aerospace domain specification
+│   ├── AERO_TELEMETRY_DATA_FABRIC.md # Phase 3 Telemetry Data Fabric specification
+│   └── AERO_DIGITAL_TWIN.md          # Phase 4 Aircraft Digital Twin specification
 ├── .env.example                      # Safe environment variables template
 └── powershell.cmd                    # Windows runner execution proxy
 ```
@@ -114,7 +148,7 @@ Sage-Command-Air-Power/
                             │
                             ▼
 ┌────────────────────────────────────────────────────────┐
-│ Reusable Core Infrastructure & Contracts               │
+│ Aero Core Infrastructure & Contracts                   │
 │  - Base Pydantic Contracts (contracts/base, common)    │
 │  - Structured Logging & Tracing (core/logging.py)      │
 │  - Environment Configuration (core/config.py)          │
@@ -211,46 +245,64 @@ The Execution Gateway in `app/services/execution_gateway.py` acts as the final t
 
 ## 10. Testing Strategy
 
-The test suite in `backend/tests/` provides automated verification:
-- **Unit Tests (20 tests):** Configuration loading, Pydantic contracts, database commit/rollback, policy engine precedence, audit ledger hash chaining/tamper detection, execution gateway gates.
-- **Integration Tests (5 tests):** FastAPI application lifecycle, `/health` and `/api/v1/health` diagnostic responses, request correlation ID propagation, 404 handling.
-- **Test Results:** 25 passed in 0.25 seconds.
+The test suite in `backend/tests/` provides exhaustive automated regression verification across all implemented layers:
+- **Phase 1 Foundation (25 tests):** Configuration loading, Pydantic contracts, database commit/rollback, policy engine precedence, audit ledger hash chaining/tamper detection, execution gateway gates, health API diagnostics.
+- **Phase 2 Domain Model (39 tests):** Aircraft schemas, component hierarchies, readiness scoring, mission/sortie state machine, maintenance records, domain database persistence, domain REST APIs.
+- **Phase 3 Telemetry Data Fabric (36 tests):** Deterministic unit conversion (altitude, airspeed, temperature, pressure, vibration), quality assessment (valid, degraded, invalid, NaN/Inf, clock drift), envelope monitoring (normal, caution, exceeded, multi-violation), synthetic profile generator, bounded ring buffer concurrency and eviction, SQLite telemetry persistence, and REST APIs.
+- **Phase 4 Aircraft Digital Twin (29 tests):** Digital twin models and bounds, state estimation fusion with channel retention across sparse frames, explainable rule-based health scoring, composite and subsystem wear indices, flight session duration tracking and cycle idempotency, persistence under SQLite WAL, and end-to-end REST API integration.
+- **Phase 5 Subsystem Intelligence (37 tests):** Anomaly data models and bounded confidence, threshold detectors (propulsion, structural G-load, control surfaces, telemetry quality), statistical z-score rolling baselines with zero-variance protection, multi-signal correlation and root-cause synthesis, decision-support maintenance recommendation engine, SQLite WAL anomaly persistence with composite indexes, 300s alert correlation/deduplication window, and REST APIs.
+- **Current Test Suite Results:** **166 passed in ~4.1 seconds** with 0 regressions.
 
 ---
 
-## 11. Reuse Strategy
+## 11. Core Architectural Modules
 
-| Reused Mechanism | SageCommand Origin | Aero Adaptation | Rationale |
-| :--- | :--- | :--- | :--- |
-| **Deterministic Policy Engine** | `backend/services/policy_service.py` | `backend/app/services/policy_engine.py` | Removed all plant/factory rules; created domain-neutral rule condition evaluator. |
-| **Cryptographic Audit Ledger** | `backend/services/audit_ledger.py` | `backend/app/services/audit_ledger.py` | Removed `plant_id` coupling; preserved SHA-256 chaining and tamper verification. |
-| **Execution Gateway** | `backend/services/execution_gateway.py` | `backend/app/services/execution_gateway.py` | Stripped manufacturing action types; preserved 10-gate pipeline and two-person rule. |
-| **Database Connection Model** | `backend/gateway/db_gateway.py` | `backend/app/db/database.py` | Replaced complex dynamic hot-swapping with robust SQLite WAL session manager. |
-| **Pydantic Envelope Pattern** | `backend/data/schemas/` | `backend/app/contracts/` | Modernized from Pydantic v1 validators to clean Pydantic v2 contracts. |
-
----
-
-## 12. Current Limitations
-
-1. **In-Memory Service Registries:** Policy Engine, Audit Ledger, and Execution Gateway currently maintain state in thread-safe memory caches. SQLite persistence will be attached during Phase 2.
-2. **Synchronous Execution Handlers:** Action execution handlers are in-process callable functions; distributed worker task queues (e.g., Celery/Redis) are not yet integrated.
-3. **No Domain Entities:** No aircraft, sortie, mission, or telemetry models exist in this baseline.
-
----
-
-## 13. Deferred Aero Domain Features
-
-The following capabilities are **explicitly planned and deferred** to subsequent phases:
-
-| Feature Area | Planned Phase | Scope |
+| Architectural Mechanism | Implementation Module | Technical Capability |
 | :--- | :--- | :--- |
-| **Aerospace Domain Model** | Phase 2 | Airframe, Squadron, Wing, Air Base, Sortie, Flight, Propulsion, Avionics, Munitions |
-| **Flight Telemetry Fabric** | Phase 3 | Telemetry ingestion bus, ARINC 429 / MIL-STD-1553 parser, flight time-series store |
-| **Aircraft Digital Twin** | Phase 4 | Bitemporal aircraft twin state, flight hours/cycles counters, component wear tracking |
-| **Subsystem Intelligence** | Phase 5 | Avionics & turbine sensor fusion, flight envelope anomaly detection, BIT code RCA |
-| **Remaining Useful Life (RUL)** | Phase 6 | Physics-informed component degradation models, unscheduled maintenance prediction |
-| **Mission Manager & ATO** | Phase 7 | Air Tasking Order (ATO) pipeline, sortie generator, mission route & loadout planning |
-| **What-If Mission Simulation** | Phase 8 | Counterfactual mission simulation, fleet turnaround optimization |
-| **Tactical Command HUD** | Phase 9 | Tactical map overlay, aircraft readiness grid, squadron Kanban |
-| **Governance Gates** | Phase 10 | Rules of Engagement (ROE) policy rules, weapon release two-person gate |
-| **Verification & Debrief** | Phase 11 | Post-maintenance BITE run-up test verification, post-sortie debrief learning loop |
+| **Deterministic Policy Engine** | `backend/app/services/policy_engine.py` | Priority-based evaluation ($\text{DENY} > \text{REQUIRE\_APPROVAL} > \text{HOLD} > \text{ALLOW}$) with sandboxed condition checking. |
+| **Cryptographic Audit Ledger** | `backend/app/services/audit_ledger.py` | Append-only SHA-256 hash-chained immutable audit trail with tamper detection. |
+| **Execution Gateway** | `backend/app/services/execution_gateway.py` | 10-gate write boundary enforcing policy checks, two-person rule authorization, and transactional rollback. |
+| **Database Engine** | `backend/app/db/database.py`, `models.py` | SQLite WAL connection management with high-concurrency PRAGMA tuning & indexed tables. |
+| **Contract Envelopes** | `backend/app/contracts/` | Pydantic v2 strict typing, standard response envelopes, and actor identities. |
+| **Canonical Domain Model** | `backend/app/domain/` | Aircraft, Component, Readiness, Mission/Sortie, Maintenance, and Telemetry aggregates. |
+| **Telemetry Normalizer** | `backend/app/telemetry/normalizer.py` | Deterministic unit conversion (SI/metric) and metadata standardisation. |
+| **Quality Evaluator** | `backend/app/telemetry/quality.py` | Deterministic evaluation of data validity, boundary physics, and clock drift. |
+| **Flight Envelope Checker** | `backend/app/telemetry/envelope.py` | Configurable boundary checking with structured violation classification. |
+| **Synthetic Profile Generator**| `backend/app/telemetry/generator.py` | Deterministic pseudo-random generation of 6 flight profiles for SIH demo. |
+| **Bounded Telemetry Buffer** | `backend/app/telemetry/buffer.py` | Thread-safe, chronological in-memory ring buffer preventing unbounded memory growth. |
+| **Telemetry Service** | `backend/app/telemetry/service.py` | Ingestion orchestration, aircraft verification, buffer dispatch, persistence, and twin hook. |
+| **Digital Twin Service** | `backend/app/digital_twin/service.py` | Orchestrates twin state estimation, flight sessions, cumulative hours/cycles, and snapshots. |
+| **Digital Twin Estimator** | `backend/app/digital_twin/estimator.py` | Fuses telemetry observations with state memory, preserving previous channel values. |
+| **Aircraft Health Estimator** | `backend/app/digital_twin/health.py` | Deterministic rule-based health scoring (0-100) with structured explainability reasons. |
+| **Wear Estimator** | `backend/app/digital_twin/wear.py` | Derives normalized wear ratings [0.0 - 1.0] from operational exposure and dynamic stresses. |
+| **Anomaly Detectors** | `backend/app/intelligence/anomaly/` | Threshold, statistical z-score, and composite detectors with zero-variance safety. |
+| **Root-Cause Diagnosis Engine** | `backend/app/intelligence/diagnosis/` | Explainable subsystem diagnosis, multi-signal correlation, and catalog rule weights. |
+| **Maintenance Recommender** | `backend/app/intelligence/maintenance.py` | Advisory maintenance prioritization (MONITOR, INSPECT, SCHEDULE, GROUND) with evidence. |
+| **Intelligence Service** | `backend/app/intelligence/service.py` | Pipeline orchestration, correlation/deduplication window, and SQLite WAL persistence. |
+
+---
+
+## 12. Current Architectural State & Limitations
+
+1. **In-Memory Ring Buffer:** Telemetry buffering uses a thread-safe in-memory ring buffer suitable for the SIH demonstration. Production deployment will bridge this to Kafka/Pulsar.
+2. **Synchronous Execution Handlers:** Action execution handlers are in-process callable functions; distributed worker task queues (e.g., Celery/Redis) are not yet integrated.
+3. **Analytical Boundary:** Telemetry, Digital Twin, and Intelligence processing are strictly observational and diagnostic. No autonomous control or weapon interlocks are implemented.
+4. **Heuristic Lifing:** Health, wear, and anomaly calculations are deterministic demonstration models; full physics-informed Remaining Useful Life (RUL) models are scheduled for Phase 6.
+
+---
+
+## 13. Aero Implementation Roadmap
+
+| Feature Area | Target Phase | Status | Scope |
+| :--- | :--- | :--- | :--- |
+| **Foundation Baseline** | Phase 1 | **COMPLETED** | FastAPI, WAL Database, Policy Engine, Audit Ledger, Execution Gateway |
+| **Aerospace Domain Model** | Phase 2 | **COMPLETED** | Airframe, Components, Readiness scoring, Sorties/Missions, Maintenance logs |
+| **Flight Telemetry Fabric** | Phase 3 | **COMPLETED** | Unit normalization, quality checking, envelope checks, buffer, persistence, REST APIs |
+| **Aircraft Digital Twin** | Phase 4 | **COMPLETED** | Bitemporal aircraft twin state, flight hours/cycles counters, component wear tracking |
+| **Subsystem Intelligence** | Phase 5 | **COMPLETED** | Threshold/statistical anomaly detection, root-cause diagnosis, maintenance recommendations |
+| **Remaining Useful Life (RUL)** | Phase 6 | *Next Phase* | Physics-informed component degradation models, unscheduled maintenance prediction |
+| **Mission Manager & ATO** | Phase 7 | Planned | Air Tasking Order (ATO) pipeline, sortie generator, mission route & loadout planning |
+| **What-If Mission Simulation** | Phase 8 | Planned | Counterfactual mission simulation, fleet turnaround optimization |
+| **Tactical Command HUD** | Phase 9 | Planned | Tactical map overlay, aircraft readiness grid, squadron Kanban |
+| **Governance Gates** | Phase 10 | Planned | Rules of Engagement (ROE) policy rules, weapon release two-person gate |
+| **Verification & Debrief** | Phase 11 | Planned | Post-maintenance BITE run-up test verification, post-sortie debrief learning loop |

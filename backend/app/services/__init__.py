@@ -28,6 +28,8 @@ from app.services.execution_gateway import (
     RollbackResult,
     default_execution_gateway,
 )
+from app.services.aircraft_service import AircraftService
+from app.services.mission_service import MissionService
 
 __all__ = [
     "PolicyEngine",
@@ -53,4 +55,6 @@ __all__ = [
     "RollbackRequest",
     "RollbackResult",
     "default_execution_gateway",
+    "AircraftService",
+    "MissionService",
 ]

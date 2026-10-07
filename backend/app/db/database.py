@@ -78,6 +78,7 @@ def init_db(database_url: Optional[str] = None, settings: Optional[Settings] = N
 
     # Create registered tables
     try:
+        import app.db.models  # noqa: F401
         Base.metadata.create_all(bind=_engine)
         logger.info(
             "Database foundation initialized successfully",
