@@ -93,6 +93,13 @@ class AircraftModel(Base):
         lazy="selectin",
         order_by="desc(AnomalyModel.timestamp)",
     )
+    prognostic_records = relationship(
+        "PrognosticRecordModel",
+        back_populates="aircraft",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="desc(PrognosticRecordModel.timestamp)",
+    )
 
 
 class ComponentModel(Base):
@@ -319,4 +326,41 @@ class AnomalyModel(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now)
 
     aircraft = relationship("AircraftModel", back_populates="anomalies")
+
+
+class PrognosticRecordModel(Base):
+    """
+    Relational persistence for prognostic assessments and RUL predictions.
+    Preserves historical degradation trends, uncertainty intervals, and maintenance forecasts.
+    """
+
+    __tablename__ = "prognostic_records"
+    __table_args__ = (
+        Index("ix_prognostics_aircraft_time", "aircraft_id", "timestamp"),
+        Index("ix_prognostics_aircraft_priority", "aircraft_id", "forecast_priority"),
+        Index("ix_prognostics_aircraft_subsystem", "aircraft_id", "subsystem"),
+    )
+
+    record_id = Column(String(64), primary_key=True, index=True)
+    aircraft_id = Column(String(64), ForeignKey("aircraft.aircraft_id", ondelete="CASCADE"), nullable=False, index=True)
+    timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
+    subsystem = Column(String(64), nullable=False, index=True)
+    health_score = Column(Float, nullable=False, default=100.0)
+    wear_index = Column(Float, nullable=False, default=0.0)
+    trend_direction = Column(String(32), nullable=False, default="STABLE")
+    degradation_rate = Column(Float, nullable=False, default=0.0)
+    slope = Column(Float, nullable=False, default=0.0)
+    estimated_rul_hours = Column(Float, nullable=False)
+    estimated_rul_cycles = Column(Integer, nullable=True)
+    lower_bound_hours = Column(Float, nullable=False)
+    upper_bound_hours = Column(Float, nullable=False)
+    confidence = Column(Float, nullable=False, default=0.85)
+    forecast_priority = Column(String(32), nullable=False, default="MONITOR", index=True)
+    prediction_method = Column(String(64), nullable=False)
+    limiting_factors = Column(JSON, nullable=True, default=list)
+    explanation = Column(Text, nullable=False)
+    recommended_action = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
+
+    aircraft = relationship("AircraftModel", back_populates="prognostic_records")
 

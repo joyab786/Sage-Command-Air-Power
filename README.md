@@ -306,9 +306,10 @@ Sage-Command-Air-Power/
 │   │   ├── telemetry/                 # Telemetry Data Fabric (Normalizer, Quality, Envelope, Buffer)
 │   │   ├── digital_twin/              # Aircraft Digital Twin (Estimator, Health, Wear, Sessions)
 │   │   ├── intelligence/              # Subsystem Intelligence (Detectors, Diagnosis, Maintenance)
+│   │   ├── prognostics/               # Prognostics & Remaining Useful Life / RUL (Trend, RUL, Forecast)
 │   │   ├── services/                  # Business services, policy engine, audit ledger, execution gateway
 │   │   └── main.py                    # Application entrypoint & lifespan handlers
-│   ├── tests/                         # Automated unit and integration tests (166 passing)
+│   ├── tests/                         # Automated unit and integration tests (214 passing)
 │   └── requirements.txt               # Backend dependencies
 ├── frontend/                          # Next.js 16 / React 19 Frontend Shell
 │   ├── app/
@@ -318,11 +319,12 @@ Sage-Command-Air-Power/
 │   └── package.json                   # Frontend dependencies
 ├── docs/                              # Technical Documentation
 │   ├── AERO_CODEBASE_RECONNAISSANCE.md # System architecture reconnaissance & baseline audit
-│   ├── ARCHITECTURE.md                # System Architecture Baseline Specification (v1.4.0)
+│   ├── ARCHITECTURE.md                # System Architecture Baseline Specification (v1.5.0)
 │   ├── AERO_DOMAIN_MODEL.md           # Canonical Aerospace Domain Model Specification
 │   ├── AERO_TELEMETRY_DATA_FABRIC.md  # Phase 3 Telemetry Data Fabric Specification
 │   ├── AERO_DIGITAL_TWIN.md           # Phase 4 Aircraft Digital Twin Specification
-│   └── AERO_INTELLIGENCE.md           # Phase 5 Subsystem Intelligence & Anomaly Detection Specification
+│   ├── AERO_INTELLIGENCE.md           # Phase 5 Subsystem Intelligence & Anomaly Detection Specification
+│   └── AERO_PROGNOSTICS.md            # Phase 6 Predictive Maintenance & RUL Specification
 ├── .env.example                       # Safe environment variables template
 ├── .gitignore                         # Comprehensive git ignore rules
 ├── powershell.cmd                     # Windows execution proxy
@@ -333,7 +335,7 @@ Sage-Command-Air-Power/
 
 ## 📌 Current Status
 
-**Current Status: 🟢 Phase 5 Complete / 166 Tests Verified Passing**
+**Current Status: 🟢 Phase 6 Complete / 214 Tests Verified Passing**
 
 * ✅ Repository established and synchronized on GitHub.
 * ✅ Architectural reconnaissance completed ([`docs/AERO_CODEBASE_RECONNAISSANCE.md`](./docs/AERO_CODEBASE_RECONNAISSANCE.md)).
@@ -342,8 +344,9 @@ Sage-Command-Air-Power/
 * ✅ Phase 3 Telemetry Data Fabric verified ([`docs/AERO_TELEMETRY_DATA_FABRIC.md`](./docs/AERO_TELEMETRY_DATA_FABRIC.md)).
 * ✅ Phase 4 Aircraft Digital Twin State Estimation verified ([`docs/AERO_DIGITAL_TWIN.md`](./docs/AERO_DIGITAL_TWIN.md)).
 * ✅ Phase 5 Subsystem Intelligence & Anomaly Detection verified ([`docs/AERO_INTELLIGENCE.md`](./docs/AERO_INTELLIGENCE.md)).
-* ✅ Complete automated test suite: **166 passing tests** with 0 regressions.
-* 🚧 Preparing for **Phase 6 (Prognostics & Remaining Useful Life / RUL)**.
+* ✅ Phase 6 Prognostics & Remaining Useful Life (RUL) verified ([`docs/AERO_PROGNOSTICS.md`](./docs/AERO_PROGNOSTICS.md)).
+* ✅ Complete automated test suite: **214 passing tests** with 0 regressions.
+* 🚧 Preparing for **Phase 7 (Mission Manager & Air Tasking Order / ATO)**.
 
 ---
 
@@ -361,11 +364,12 @@ Sage-Command-Air-Power/
 ## 📚 Documentation Links
 
 * 📄 **[Aero Codebase Reconnaissance Report](./docs/AERO_CODEBASE_RECONNAISSANCE.md)** — System architecture reconnaissance, operational loop mapping, and technical baseline analysis.
-* 📄 **[System Architecture Specification](./docs/ARCHITECTURE.md)** — Technical baseline documentation for foundations, contracts, and execution gates (v1.4.0).
+* 📄 **[System Architecture Specification](./docs/ARCHITECTURE.md)** — Technical baseline documentation for foundations, contracts, and execution gates (v1.5.0).
 * 📄 **[Aero Domain Model Specification](./docs/AERO_DOMAIN_MODEL.md)** — Canonical aerospace domain model, entities, and database mappings.
 * 📄 **[Aero Telemetry Data Fabric Specification](./docs/AERO_TELEMETRY_DATA_FABRIC.md)** — Telemetry ingestion, normalization, quality evaluation, and buffering.
 * 📄 **[Aero Aircraft Digital Twin Specification](./docs/AERO_DIGITAL_TWIN.md)** — Bitemporal digital twin state estimation, health scoring, and wear estimation.
 * 📄 **[Aero Subsystem Intelligence Specification](./docs/AERO_INTELLIGENCE.md)** — Deterministic threshold/statistical anomaly detection, root-cause diagnosis, and maintenance recommendations.
+* 📄 **[Aero Prognostics & RUL Specification](./docs/AERO_PROGNOSTICS.md)** — Explainable degradation trends, Remaining Useful Life (RUL), and decision-support maintenance forecasts.
 
 ---
 *Developed for the Smart India Hackathon (SIH) // SageCommand Air Power System Team*

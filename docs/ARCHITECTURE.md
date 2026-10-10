@@ -1,8 +1,8 @@
 # SageCommand Air Power System (Aero) — System Architecture
-**Phase 5: Subsystem Intelligence & Anomaly Detection (SIH MVP) Specification**  
-*Document Version:* 1.4.0  
-*Date:* 2026-10-06  
-*Status:* IMPLEMENTED BASELINE (Phases 1-5 Verified: 166 Passing Automated Tests)  
+**Phase 6: Predictive Maintenance & Remaining Useful Life (RUL) Prognostics (SIH MVP) Specification**  
+*Document Version:* 1.5.0  
+*Date:* 2026-10-07  
+*Status:* IMPLEMENTED BASELINE (Phases 1-6 Verified: 213 Passing Automated Tests)  
 
 ---
 
@@ -19,6 +19,7 @@ The **SageCommand Air Power System (Aero)** is designed as an autonomous command
 7. **Clean Telemetry Data Fabric:** Ingest, normalize, validate, and buffer flight telemetry deterministically before state estimation or persistence.
 8. **Explainable Digital Twin State Estimation:** Continuous operational representation with memory retention, rule-based health scoring, and transparent reasons.
 9. **Explainable Subsystem Intelligence:** Deterministic threshold and statistical anomaly detection, correlation/deduplication windows, multi-signal root-cause synthesis, and advisory maintenance recommendations.
+10. **Explainable Trend-Based Prognostics:** Defensible health degradation slopes (OLS regression), bounded Remaining Useful Life (RUL) estimation with explicit uncertainty intervals, and consolidated maintenance forecasting.
 
 ---
 
@@ -42,7 +43,7 @@ Sage-Command-Air-Power/
 │   │   ├── db/
 │   │   │   ├── __init__.py           # Database exports
 │   │   │   ├── database.py           # SQLAlchemy engine, sessions, and SQLite WAL pragma
-│   │   │   └── models.py             # SQLAlchemy ORM models (Aircraft, Telemetry, Twin, Sessions)
+│   │   │   └── models.py             # SQLAlchemy ORM models (Aircraft, Telemetry, Twin, Sessions, Prognostics)
 │   │   ├── domain/                   # Canonical Aerospace Domain Layer (Phase 2)
 │   │   │   ├── __init__.py           # Domain exports
 │   │   │   ├── enums.py              # Domain enums (Readiness, AircraftType, Subsystems)
@@ -75,12 +76,20 @@ Sage-Command-Air-Power/
 │   │   │   ├── diagnosis/            # Root-cause synthesis & multi-signal correlation rules
 │   │   │   ├── maintenance.py        # Decision-support maintenance recommendation engine
 │   │   │   └── service.py            # IntelligenceService (correlation, deduplication & WAL)
+│   │   ├── prognostics/              # Predictive Maintenance & RUL Prognostics (Phase 6)
+│   │   │   ├── __init__.py           # Prognostics package exports
+│   │   │   ├── models.py             # ComponentHealthSnapshot, DegradationTrend, RULPrediction, Forecast
+│   │   │   ├── health_history.py     # HealthHistoryAggregator (digital-twin history queries)
+│   │   │   ├── trend.py              # DegradationTrendEstimator (OLS regression, slope, R²)
+│   │   │   ├── rul.py                # BaseRULPredictor protocol & DeterministicRULPredictor
+│   │   │   ├── forecast.py           # MaintenanceForecaster (5 priority tiers & operational windows)
+│   │   │   └── service.py            # PrognosticsService orchestration & SQLite WAL persistence
 │   │   ├── api/
 │   │   │   ├── __init__.py           # API exports
 │   │   │   └── routes/
 │   │   │       ├── __init__.py       # Route exports
 │   │   │       ├── health.py         # GET /health diagnostics endpoint
-│   │   │       ├── aircraft.py       # Aircraft, twin, anomalies, diagnosis & maintenance endpoints
+│   │   │       ├── aircraft.py       # Aircraft, twin, anomalies, prognostics & maintenance endpoints
 │   │   │       ├── missions.py       # Mission & sortie management endpoints
 │   │   │       └── telemetry.py      # Telemetry ingestion & query endpoints
 │   │   ├── services/
@@ -93,8 +102,8 @@ Sage-Command-Air-Power/
 │   ├── tests/
 │   │   ├── __init__.py               # Test suite package
 │   │   ├── conftest.py               # Shared pytest fixtures (in-memory DB, TestClient)
-│   │   ├── unit/                     # Unit test suites (125 tests)
-│   │   └── integration/              # Integration test suites (41 tests)
+│   │   ├── unit/                     # Unit test suites (162 tests)
+│   │   └── integration/              # Integration test suites (52 tests)
 │   └── requirements.txt              # Backend dependencies
 ├── frontend/
 │   ├── app/
@@ -251,7 +260,8 @@ The test suite in `backend/tests/` provides exhaustive automated regression veri
 - **Phase 3 Telemetry Data Fabric (36 tests):** Deterministic unit conversion (altitude, airspeed, temperature, pressure, vibration), quality assessment (valid, degraded, invalid, NaN/Inf, clock drift), envelope monitoring (normal, caution, exceeded, multi-violation), synthetic profile generator, bounded ring buffer concurrency and eviction, SQLite telemetry persistence, and REST APIs.
 - **Phase 4 Aircraft Digital Twin (29 tests):** Digital twin models and bounds, state estimation fusion with channel retention across sparse frames, explainable rule-based health scoring, composite and subsystem wear indices, flight session duration tracking and cycle idempotency, persistence under SQLite WAL, and end-to-end REST API integration.
 - **Phase 5 Subsystem Intelligence (37 tests):** Anomaly data models and bounded confidence, threshold detectors (propulsion, structural G-load, control surfaces, telemetry quality), statistical z-score rolling baselines with zero-variance protection, multi-signal correlation and root-cause synthesis, decision-support maintenance recommendation engine, SQLite WAL anomaly persistence with composite indexes, 300s alert correlation/deduplication window, and REST APIs.
-- **Current Test Suite Results:** **166 passed in ~4.1 seconds** with 0 regressions.
+- **Phase 6 Predictive Maintenance & RUL (48 tests):** Prognostic model validation, ordinary least-squares linear trend engine with fit quality ($R^2$), insufficient-data protections, deterministic RUL prediction with conservative wear bounds, Phase 5 anomaly modifier integration, uncertainty interval math ($0.0 \le \text{lower} \le \text{est} \le \text{upper}$), 5-tier maintenance forecasting, SQLite WAL persistence (`prognostic_records`), versioned REST APIs, and 6 end-to-end synthetic demonstration scenarios.
+- **Current Test Suite Results:** **214 passed in ~6.3 seconds** with 0 regressions.
 
 ---
 
@@ -279,6 +289,11 @@ The test suite in `backend/tests/` provides exhaustive automated regression veri
 | **Root-Cause Diagnosis Engine** | `backend/app/intelligence/diagnosis/` | Explainable subsystem diagnosis, multi-signal correlation, and catalog rule weights. |
 | **Maintenance Recommender** | `backend/app/intelligence/maintenance.py` | Advisory maintenance prioritization (MONITOR, INSPECT, SCHEDULE, GROUND) with evidence. |
 | **Intelligence Service** | `backend/app/intelligence/service.py` | Pipeline orchestration, correlation/deduplication window, and SQLite WAL persistence. |
+| **Health History Aggregator** | `backend/app/prognostics/health_history.py` | Chronological snapshot extraction from twin states without telemetry duplication. |
+| **Degradation Trend Estimator**| `backend/app/prognostics/trend.py` | OLS regression over time, degradation rate, direction classification, and fit quality ($R^2$). |
+| **Deterministic RUL Predictor** | `backend/app/prognostics/rul.py` | Extensible `BaseRULPredictor` protocol, linear extrapolation, conservative wear bounds, and anomaly modifiers. |
+| **Maintenance Forecaster** | `backend/app/prognostics/forecast.py` | Consolidated 5-tier maintenance advisory (MONITOR through GROUND_FOR_REVIEW) with operational windows. |
+| **Prognostics Service** | `backend/app/prognostics/service.py` | End-to-end prognostic assessment, readiness impact evaluation, and SQLite WAL persistence. |
 
 ---
 
@@ -286,8 +301,8 @@ The test suite in `backend/tests/` provides exhaustive automated regression veri
 
 1. **In-Memory Ring Buffer:** Telemetry buffering uses a thread-safe in-memory ring buffer suitable for the SIH demonstration. Production deployment will bridge this to Kafka/Pulsar.
 2. **Synchronous Execution Handlers:** Action execution handlers are in-process callable functions; distributed worker task queues (e.g., Celery/Redis) are not yet integrated.
-3. **Analytical Boundary:** Telemetry, Digital Twin, and Intelligence processing are strictly observational and diagnostic. No autonomous control or weapon interlocks are implemented.
-4. **Heuristic Lifing:** Health, wear, and anomaly calculations are deterministic demonstration models; full physics-informed Remaining Useful Life (RUL) models are scheduled for Phase 6.
+3. **Analytical Boundary:** Telemetry, Digital Twin, Intelligence, and Prognostics processing are strictly observational and diagnostic. No autonomous control or weapon interlocks are implemented.
+4. **Heuristic & Trend Lifing:** Health, wear, anomaly, and RUL calculations represent an explainable SIH prototype methodology rather than production-certified aerospace physics models.
 
 ---
 
@@ -300,8 +315,8 @@ The test suite in `backend/tests/` provides exhaustive automated regression veri
 | **Flight Telemetry Fabric** | Phase 3 | **COMPLETED** | Unit normalization, quality checking, envelope checks, buffer, persistence, REST APIs |
 | **Aircraft Digital Twin** | Phase 4 | **COMPLETED** | Bitemporal aircraft twin state, flight hours/cycles counters, component wear tracking |
 | **Subsystem Intelligence** | Phase 5 | **COMPLETED** | Threshold/statistical anomaly detection, root-cause diagnosis, maintenance recommendations |
-| **Remaining Useful Life (RUL)** | Phase 6 | *Next Phase* | Physics-informed component degradation models, unscheduled maintenance prediction |
-| **Mission Manager & ATO** | Phase 7 | Planned | Air Tasking Order (ATO) pipeline, sortie generator, mission route & loadout planning |
+| **Remaining Useful Life (RUL)** | Phase 6 | **COMPLETED** | Explainable health trends, OLS degradation, bounded RUL, 5-tier forecasts, readiness impact |
+| **Mission Manager & ATO** | Phase 7 | *Next Phase* | Air Tasking Order (ATO) pipeline, sortie generator, mission route & loadout planning |
 | **What-If Mission Simulation** | Phase 8 | Planned | Counterfactual mission simulation, fleet turnaround optimization |
 | **Tactical Command HUD** | Phase 9 | Planned | Tactical map overlay, aircraft readiness grid, squadron Kanban |
 | **Governance Gates** | Phase 10 | Planned | Rules of Engagement (ROE) policy rules, weapon release two-person gate |

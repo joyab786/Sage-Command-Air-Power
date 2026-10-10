@@ -349,3 +349,106 @@ def get_aircraft_maintenance_recommendations(
         data=recommendations,
         message=f"Retrieved {len(recommendations)} maintenance recommendations for aircraft '{aircraft_id}'",
     )
+
+
+# -----------------------------------------------------------------------------
+# Phase 6: Predictive Maintenance & Remaining Useful Life (RUL) Endpoints
+# -----------------------------------------------------------------------------
+
+@router.get(
+    "/{aircraft_id}/prognostics",
+    summary="Get Aircraft Prognostic Assessment",
+    description="Computes and returns the latest explainable prognostic assessment, combining degradation trends, RUL bounds, and maintenance forecast.",
+)
+def get_aircraft_prognostics(
+    aircraft_id: str,
+    subsystem: Optional[str] = Query(default=None, description="Target subsystem (e.g., PROPULSION)"),
+    db: Session = Depends(get_db),
+):
+    from app.prognostics.service import default_prognostics_service
+    from app.prognostics.models import PrognosticAssessment
+    from app.digital_twin.models import TwinSubsystemType
+
+    target_sub = None
+    if subsystem:
+        try:
+            target_sub = TwinSubsystemType(subsystem.upper())
+        except ValueError:
+            target_sub = None
+
+    assessment = default_prognostics_service.assess_aircraft_prognostics(
+        db, aircraft_id=aircraft_id, subsystem=target_sub, persist=True
+    )
+    return ApiResponse[PrognosticAssessment](
+        data=assessment,
+        message=f"Prognostic assessment for aircraft '{aircraft_id}' computed",
+    )
+
+
+@router.get(
+    "/{aircraft_id}/prognostics/history",
+    summary="Get Historical Prognostic Records",
+    description="Retrieves historical persisted prognostic predictions and RUL assessments for an aircraft.",
+)
+def get_aircraft_prognostic_history(
+    aircraft_id: str,
+    limit: int = Query(default=50, ge=1, le=200, description="Max records to retrieve"),
+    db: Session = Depends(get_db),
+):
+    from app.prognostics.service import default_prognostics_service
+    from app.prognostics.models import PrognosticRecordResponse
+
+    records = default_prognostics_service.get_historical_predictions(db, aircraft_id=aircraft_id, limit=limit)
+    response_items = [PrognosticRecordResponse.model_validate(r) for r in records]
+    return ApiResponse[List[PrognosticRecordResponse]](
+        data=response_items,
+        message=f"Retrieved {len(response_items)} historical prognostic records for aircraft '{aircraft_id}'",
+    )
+
+
+@router.get(
+    "/{aircraft_id}/health-trend",
+    summary="Get Aircraft Health Degradation Trend",
+    description="Returns the ordinary least-squares degradation trend, slope, direction, and fit quality for an aircraft subsystem.",
+)
+def get_aircraft_health_trend(
+    aircraft_id: str,
+    subsystem: Optional[str] = Query(default=None, description="Target subsystem (e.g., PROPULSION)"),
+    db: Session = Depends(get_db),
+):
+    from app.prognostics.service import default_prognostics_service
+    from app.prognostics.models import DegradationTrend
+    from app.digital_twin.models import TwinSubsystemType
+
+    target_sub = None
+    if subsystem:
+        try:
+            target_sub = TwinSubsystemType(subsystem.upper())
+        except ValueError:
+            target_sub = None
+
+    trend = default_prognostics_service.get_health_trend(db, aircraft_id=aircraft_id, subsystem=target_sub)
+    return ApiResponse[DegradationTrend](
+        data=trend,
+        message=f"Degradation trend for aircraft '{aircraft_id}' evaluated",
+    )
+
+
+@router.get(
+    "/{aircraft_id}/maintenance-forecast",
+    summary="Get Prioritized Maintenance Forecast",
+    description="Retrieves prioritized maintenance forecast based on RUL urgency, degradation rate, and active anomaly evidence.",
+)
+def get_aircraft_maintenance_forecast(
+    aircraft_id: str,
+    db: Session = Depends(get_db),
+):
+    from app.prognostics.service import default_prognostics_service
+    from app.prognostics.models import MaintenanceForecast
+
+    forecast = default_prognostics_service.get_maintenance_forecast(db, aircraft_id=aircraft_id)
+    return ApiResponse[MaintenanceForecast](
+        data=forecast,
+        message=f"Maintenance forecast for aircraft '{aircraft_id}' retrieved",
+    )
+
