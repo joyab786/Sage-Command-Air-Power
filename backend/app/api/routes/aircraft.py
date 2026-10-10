@@ -452,3 +452,30 @@ def get_aircraft_maintenance_forecast(
         message=f"Maintenance forecast for aircraft '{aircraft_id}' retrieved",
     )
 
+
+# -----------------------------------------------------------------------------
+# Phase 7: Mission Eligibility Endpoint
+# -----------------------------------------------------------------------------
+
+@router.get(
+    "/{aircraft_id}/mission-eligibility",
+    summary="Evaluate Aircraft Mission Eligibility",
+    description="Evaluates aircraft qualification against operational readiness, maintenance clearance, anomalies, and prognostic lifing.",
+)
+def get_aircraft_mission_eligibility(
+    aircraft_id: str,
+    sortie_id: Optional[str] = Query(default=None, description="Target sortie requirement identifier"),
+    db: Session = Depends(get_db),
+):
+    from app.mission_manager.service import default_mission_manager_service
+    from app.mission_manager.models import AircraftEligibilityReport
+
+    report = default_mission_manager_service.evaluate_aircraft_eligibility(
+        db, aircraft_id=aircraft_id, sortie_id=sortie_id
+    )
+    return ApiResponse[AircraftEligibilityReport](
+        data=report,
+        message=f"Mission eligibility for aircraft '{aircraft_id}' evaluated: {report.status.value}",
+    )
+
+

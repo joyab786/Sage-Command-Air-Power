@@ -135,6 +135,9 @@ class RULPrediction(AeroBaseModel):
     limiting_factors: List[str] = Field(default_factory=list, description="Primary physical or statistical constraints")
     explanation: str = Field(..., description="Structured, transparent natural-language justification")
     recommended_action: str = Field(..., description="Advisory decision-support recommendation")
+    is_supported: bool = Field(default=True, description="Whether RUL is supported by sufficient historical degradation data rather than unvalidated fallback")
+    is_nominal_ceiling: bool = Field(default=False, description="Whether RUL estimate reflects nominal demonstration ceiling")
+    rul_status: str = Field(default="ESTIMATED", description="Semantic RUL status: ESTIMATED, NOMINAL_BASELINE, INSUFFICIENT_DATA, or DEPLETED")
 
     @field_validator("confidence")
     @classmethod
@@ -235,5 +238,7 @@ class PrognosticRecordResponse(AeroBaseModel):
     limiting_factors: List[str] = Field(default_factory=list)
     explanation: str
     recommended_action: str
+    is_supported: bool = True
+    rul_status: str = "ESTIMATED"
     created_at: datetime
 

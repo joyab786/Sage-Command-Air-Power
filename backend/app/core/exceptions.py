@@ -135,3 +135,16 @@ class ConcurrencyConflictError(AeroException):
             status_code=409,
             details=details,
         )
+
+
+class ConflictError(AeroException):
+    """Raised when an operation conflicts with the current resource state."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            error_code="CONFLICT",
+            status_code=409,
+            details=details,
+        )
+

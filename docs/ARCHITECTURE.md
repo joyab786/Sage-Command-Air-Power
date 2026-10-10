@@ -1,8 +1,8 @@
 # SageCommand Air Power System (Aero) — System Architecture
-**Phase 6: Predictive Maintenance & Remaining Useful Life (RUL) Prognostics (SIH MVP) Specification**  
-*Document Version:* 1.5.0  
-*Date:* 2026-10-07  
-*Status:* IMPLEMENTED BASELINE (Phases 1-6 Verified: 213 Passing Automated Tests)  
+**Phase 7: Mission Manager & Air Tasking Order (ATO) Foundation Specification**  
+*Document Version:* 1.6.0  
+*Date:* 2026-10-10  
+*Status:* IMPLEMENTED BASELINE (Phases 1-7 Verified: 269 Passing Automated Tests)  
 
 ---
 
@@ -84,14 +84,23 @@ Sage-Command-Air-Power/
 │   │   │   ├── rul.py                # BaseRULPredictor protocol & DeterministicRULPredictor
 │   │   │   ├── forecast.py           # MaintenanceForecaster (5 priority tiers & operational windows)
 │   │   │   └── service.py            # PrognosticsService orchestration & SQLite WAL persistence
+│   │   ├── mission_manager/          # Mission Manager & ATO Allocation Foundation (Phase 7)
+│   │   │   ├── __init__.py           # Mission manager exports
+│   │   │   ├── models.py             # ATODocument, ProposedSortie, AllocationProposal models
+│   │   │   ├── ato_parser.py         # Safe synthetic ATO JSON parser
+│   │   │   ├── validation.py         # ATOValidator (schema, safety boundaries & planning windows)
+│   │   │   ├── eligibility.py        # AircraftEligibilityEvaluator (multi-signal qualification)
+│   │   │   ├── allocation.py         # Deterministic AllocationScorer & AllocationEngine
+│   │   │   └── service.py            # MissionManagerService (audit-governed proposal lifecycle)
 │   │   ├── api/
 │   │   │   ├── __init__.py           # API exports
 │   │   │   └── routes/
 │   │   │       ├── __init__.py       # Route exports
 │   │   │       ├── health.py         # GET /health diagnostics endpoint
-│   │   │       ├── aircraft.py       # Aircraft, twin, anomalies, prognostics & maintenance endpoints
+│   │   │       ├── aircraft.py       # Aircraft, twin, anomalies, prognostics & mission-eligibility
 │   │   │       ├── missions.py       # Mission & sortie management endpoints
-│   │   │       └── telemetry.py      # Telemetry ingestion & query endpoints
+│   │   │       ├── telemetry.py      # Telemetry ingestion & query endpoints
+│   │   │       └── ato.py            # ATO validation, ingestion, allocation proposals & governance
 │   │   ├── services/
 │   │   │   ├── __init__.py           # Services exports
 │   │   │   ├── policy_engine.py      # Deterministic policy engine (DENY > APPROVAL > HOLD > ALLOW)
@@ -294,6 +303,10 @@ The test suite in `backend/tests/` provides exhaustive automated regression veri
 | **Deterministic RUL Predictor** | `backend/app/prognostics/rul.py` | Extensible `BaseRULPredictor` protocol, linear extrapolation, conservative wear bounds, and anomaly modifiers. |
 | **Maintenance Forecaster** | `backend/app/prognostics/forecast.py` | Consolidated 5-tier maintenance advisory (MONITOR through GROUND_FOR_REVIEW) with operational windows. |
 | **Prognostics Service** | `backend/app/prognostics/service.py` | End-to-end prognostic assessment, readiness impact evaluation, and SQLite WAL persistence. |
+| **Synthetic ATO Parser** | `backend/app/mission_manager/ato_parser.py` | Safe JSON parser with strict schema validation and forbidden operational parameter guards. |
+| **Mission Eligibility Engine** | `backend/app/mission_manager/eligibility.py` | Multi-signal airframe qualification against readiness, anomalies, maintenance, and RUL safeguards. |
+| **Deterministic Allocation Engine**| `backend/app/mission_manager/allocation.py` | Priority-weighted matching with composite scoring, zero overlapping commitments, and alternatives. |
+| **Mission Manager Service** | `backend/app/mission_manager/service.py` | End-to-end orchestration, proposal persistence, and audit-governed human review (approve/reject). |
 
 ---
 
@@ -301,8 +314,9 @@ The test suite in `backend/tests/` provides exhaustive automated regression veri
 
 1. **In-Memory Ring Buffer:** Telemetry buffering uses a thread-safe in-memory ring buffer suitable for the SIH demonstration. Production deployment will bridge this to Kafka/Pulsar.
 2. **Synchronous Execution Handlers:** Action execution handlers are in-process callable functions; distributed worker task queues (e.g., Celery/Redis) are not yet integrated.
-3. **Analytical Boundary:** Telemetry, Digital Twin, Intelligence, and Prognostics processing are strictly observational and diagnostic. No autonomous control or weapon interlocks are implemented.
+3. **Analytical Boundary:** Telemetry, Digital Twin, Intelligence, Prognostics, and Mission Manager processing are strictly observational and diagnostic. No autonomous control or weapon interlocks are implemented.
 4. **Heuristic & Trend Lifing:** Health, wear, anomaly, and RUL calculations represent an explainable SIH prototype methodology rather than production-certified aerospace physics models.
+5. **Greedy Matching Engine:** Mission allocation utilizes a deterministic priority-ordered greedy matching engine tailored for squadron demonstrations ($N \le 50$ airframes).
 
 ---
 
@@ -316,8 +330,8 @@ The test suite in `backend/tests/` provides exhaustive automated regression veri
 | **Aircraft Digital Twin** | Phase 4 | **COMPLETED** | Bitemporal aircraft twin state, flight hours/cycles counters, component wear tracking |
 | **Subsystem Intelligence** | Phase 5 | **COMPLETED** | Threshold/statistical anomaly detection, root-cause diagnosis, maintenance recommendations |
 | **Remaining Useful Life (RUL)** | Phase 6 | **COMPLETED** | Explainable health trends, OLS degradation, bounded RUL, 5-tier forecasts, readiness impact |
-| **Mission Manager & ATO** | Phase 7 | *Next Phase* | Air Tasking Order (ATO) pipeline, sortie generator, mission route & loadout planning |
-| **What-If Mission Simulation** | Phase 8 | Planned | Counterfactual mission simulation, fleet turnaround optimization |
+| **Mission Manager & ATO** | Phase 7 | **COMPLETED** | Synthetic ATO ingestion, multi-signal eligibility, deterministic allocation, human governance |
+| **What-If Mission Simulation** | Phase 8 | *Next Phase* | Counterfactual mission simulation, fleet turnaround optimization |
 | **Tactical Command HUD** | Phase 9 | Planned | Tactical map overlay, aircraft readiness grid, squadron Kanban |
 | **Governance Gates** | Phase 10 | Planned | Rules of Engagement (ROE) policy rules, weapon release two-person gate |
 | **Verification & Debrief** | Phase 11 | Planned | Post-maintenance BITE run-up test verification, post-sortie debrief learning loop |

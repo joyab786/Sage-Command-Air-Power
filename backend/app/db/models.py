@@ -100,6 +100,12 @@ class AircraftModel(Base):
         lazy="selectin",
         order_by="desc(PrognosticRecordModel.timestamp)",
     )
+    allocation_proposals = relationship(
+        "SortieAllocationProposalModel",
+        back_populates="aircraft",
+        lazy="selectin",
+        order_by="desc(SortieAllocationProposalModel.proposed_at)",
+    )
 
 
 class ComponentModel(Base):
@@ -357,10 +363,115 @@ class PrognosticRecordModel(Base):
     confidence = Column(Float, nullable=False, default=0.85)
     forecast_priority = Column(String(32), nullable=False, default="MONITOR", index=True)
     prediction_method = Column(String(64), nullable=False)
+    is_supported = Column(Boolean, nullable=False, default=True)
+    rul_status = Column(String(32), nullable=False, default="ESTIMATED")
     limiting_factors = Column(JSON, nullable=True, default=list)
     explanation = Column(Text, nullable=False)
     recommended_action = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
 
     aircraft = relationship("AircraftModel", back_populates="prognostic_records")
+
+
+class ATODocumentModel(Base):
+    """
+    Relational record for structured synthetic Air Tasking Orders (ATO).
+    Captures issue metadata, planning windows, validation status, and parsed findings.
+    """
+
+    __tablename__ = "ato_documents"
+
+    ato_id = Column(String(64), primary_key=True, index=True)
+    schema_version = Column(String(32), nullable=False, default="1.0.0")
+    issue_timestamp = Column(DateTime(timezone=True), nullable=False, default=utc_now)
+    planning_window_start = Column(DateTime(timezone=True), nullable=False, index=True)
+    planning_window_end = Column(DateTime(timezone=True), nullable=False, index=True)
+    source = Column(String(64), nullable=False, default="SYNTHETIC_SIH_DEMO")
+    validation_status = Column(String(32), nullable=False, default="VALID", index=True)
+    validation_findings = Column(JSON, nullable=True, default=list)
+    raw_document = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
+
+    sorties = relationship(
+        "ProposedSortieModel",
+        back_populates="ato",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="asc(ProposedSortieModel.start_time)",
+    )
+    allocation_proposals = relationship(
+        "SortieAllocationProposalModel",
+        back_populates="ato",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+class ProposedSortieModel(Base):
+    """
+    Relational record of a proposed operational flight sortie within a synthetic ATO document.
+    """
+
+    __tablename__ = "proposed_sorties"
+    __table_args__ = (
+        Index("ix_sorties_ato_start", "ato_id", "start_time"),
+    )
+
+    sortie_id = Column(String(64), primary_key=True, index=True)
+    ato_id = Column(String(64), ForeignKey("ato_documents.ato_id", ondelete="CASCADE"), nullable=False, index=True)
+    mission_category = Column(String(64), nullable=False, default="TRAINING", index=True)
+    start_time = Column(DateTime(timezone=True), nullable=False, index=True)
+    end_time = Column(DateTime(timezone=True), nullable=False)
+    required_aircraft_type = Column(String(64), nullable=False, index=True)
+    required_capabilities = Column(JSON, nullable=False, default=list)
+    min_aircraft_count = Column(Integer, nullable=False, default=1)
+    priority = Column(String(32), nullable=False, default="ROUTINE", index=True)
+    estimated_duration_hours = Column(Float, nullable=True)
+    status = Column(String(32), nullable=False, default="UNASSIGNED", index=True)
+    explanation = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
+
+    ato = relationship("ATODocumentModel", back_populates="sorties")
+    proposals = relationship(
+        "SortieAllocationProposalModel",
+        back_populates="sortie",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+class SortieAllocationProposalModel(Base):
+    """
+    Relational record of an explainable aircraft allocation proposal for a sortie.
+    Maintains governance lifecycle: PROPOSED -> REQUIRES_REVIEW -> APPROVED | REJECTED.
+    """
+
+    __tablename__ = "allocation_proposals"
+    __table_args__ = (
+        Index("ix_alloc_ato_status", "ato_id", "status"),
+        Index("ix_alloc_aircraft_status", "proposed_aircraft_id", "status"),
+    )
+
+    proposal_id = Column(String(64), primary_key=True, index=True)
+    ato_id = Column(String(64), ForeignKey("ato_documents.ato_id", ondelete="CASCADE"), nullable=False, index=True)
+    sortie_id = Column(String(64), ForeignKey("proposed_sorties.sortie_id", ondelete="CASCADE"), nullable=False, index=True)
+    proposed_aircraft_id = Column(String(64), ForeignKey("aircraft.aircraft_id", ondelete="SET NULL"), nullable=True, index=True)
+    eligibility_status = Column(String(32), nullable=True, index=True)
+    score = Column(Float, nullable=False, default=0.0)
+    scoring_breakdown = Column(JSON, nullable=True, default=dict)
+    evidence = Column(JSON, nullable=True, default=dict)
+    conflicts = Column(JSON, nullable=True, default=list)
+    alternatives = Column(JSON, nullable=True, default=list)
+    explanation = Column(Text, nullable=False)
+    status = Column(String(32), nullable=False, default="PROPOSED", index=True)
+    proposed_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
+    reviewed_by = Column(String(64), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    review_decision_reason = Column(Text, nullable=True)
+    audit_event_id = Column(String(64), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
+
+    ato = relationship("ATODocumentModel", back_populates="allocation_proposals")
+    sortie = relationship("ProposedSortieModel", back_populates="proposals")
+    aircraft = relationship("AircraftModel", back_populates="allocation_proposals")
 

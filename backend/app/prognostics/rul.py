@@ -60,6 +60,10 @@ class DeterministicRULPredictor:
         cur_health = trend.current_health
         cur_wear = current_state.wear_index if current_state else 0.0
 
+        is_supported = True
+        is_nominal_ceiling = False
+        rul_status = "ESTIMATED"
+
         # ---------------------------------------------------------------------
         # 1. Base RUL Calculation by Trend Direction
         # ---------------------------------------------------------------------
@@ -67,6 +71,9 @@ class DeterministicRULPredictor:
             estimated_rul = self.NOMINAL_MAX_RUL_HOURS
             prediction_method = PredictionMethod.INSUFFICIENT_HISTORY_FALLBACK
             confidence = min(0.25, trend.confidence)
+            is_supported = False
+            is_nominal_ceiling = True
+            rul_status = "INSUFFICIENT_DATA"
             limiting_factors.append("Insufficient historical observations to establish degradation slope")
             explanation = (
                 f"Insufficient historical data ({trend.sample_count} observations). "
@@ -79,6 +86,9 @@ class DeterministicRULPredictor:
             estimated_rul = self.NOMINAL_MAX_RUL_HOURS
             prediction_method = PredictionMethod.BASELINE_NOMINAL
             confidence = trend.confidence
+            is_supported = True
+            is_nominal_ceiling = True
+            rul_status = "NOMINAL_BASELINE"
 
             # Wear index bounding if significantly worn
             if cur_wear > 0.4:
@@ -87,6 +97,8 @@ class DeterministicRULPredictor:
                 if wear_based_rul < estimated_rul:
                     estimated_rul = wear_based_rul
                     prediction_method = PredictionMethod.COMPOSITE_CONSERVATIVE_BOUND
+                    is_nominal_ceiling = False
+                    rul_status = "WEAR_LIMITED"
                     limiting_factors.append(f"Cumulative structural wear index ({cur_wear:.2f}) limits design margin")
 
             explanation = (
@@ -99,6 +111,9 @@ class DeterministicRULPredictor:
             # TrendDirection.DEGRADING
             prediction_method = PredictionMethod.TREND_LINEAR_EXTRAPOLATION
             confidence = trend.confidence
+            is_supported = True
+            is_nominal_ceiling = False
+            rul_status = "ESTIMATED"
 
             # Primary trend-based extrapolation to critical threshold
             health_margin = max(0.0, cur_health - self.HEALTH_FAILURE_THRESHOLD)
@@ -106,6 +121,7 @@ class DeterministicRULPredictor:
                 trend_rul = health_margin / trend.degradation_rate
             else:
                 trend_rul = self.NOMINAL_MAX_RUL_HOURS
+                is_nominal_ceiling = True
 
             # Conservative wear bound
             wear_margin = max(0.0, self.WEAR_FAILURE_THRESHOLD - cur_wear)
@@ -155,6 +171,8 @@ class DeterministicRULPredictor:
 
         # Guarantee non-negative RUL
         estimated_rul = max(0.0, round(estimated_rul, 2))
+        if estimated_rul == 0.0:
+            rul_status = "DEPLETED"
 
         # ---------------------------------------------------------------------
         # 3. Uncertainty Interval Bounds
@@ -190,6 +208,9 @@ class DeterministicRULPredictor:
             limiting_factors=limiting_factors,
             explanation=explanation,
             recommended_action=recommended_action,
+            is_supported=is_supported,
+            is_nominal_ceiling=is_nominal_ceiling,
+            rul_status=rul_status,
         )
 
 

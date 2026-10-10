@@ -194,6 +194,8 @@ class PrognosticsService:
                 confidence=composite_confidence,
                 forecast_priority=forecast.priority.value,
                 prediction_method=rul.prediction_method.value,
+                is_supported=rul.is_supported,
+                rul_status=rul.rul_status,
                 limiting_factors=rul.limiting_factors,
                 explanation=explanation,
                 recommended_action=rul.recommended_action,

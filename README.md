@@ -256,7 +256,7 @@ Readiness Intelligence
 Command Center
 ```
 
-### Current Implemented Capabilities (Phases 1–5):
+### Current Implemented Capabilities (Phases 1–7):
 * **Aero Domain Model:** Canonical aerospace domain aggregates (`Aircraft`, `Component`, `Telemetry`, `ReadinessAssessment`, `Mission`, `MaintenanceEvent`).
 * **Telemetry Ingestion:** High-throughput streaming and batch ingest with SI unit normalization and coordinate consistency.
 * **Telemetry Quality Assessment:** Real-time data quality classification (`VALID`, `DEGRADED`, `INVALID`) catching clock drift, NaN/Inf, and channel drops.
@@ -268,10 +268,14 @@ Command Center
 * **Root-Cause Diagnosis Engine:** Subsystem diagnosis synthesis, multi-signal correlation, and catalog rule weighting.
 * **Decision-Support Maintenance Recommendations:** Prioritized advisories (`MONITOR`, `INSPECT`, `SCHEDULE_MAINTENANCE`, `GROUND_FOR_REVIEW`) with clear evidence links.
 * **Readiness Integration Boundary:** Direct coupling between active subsystem anomalies and fleet readiness classifications.
-* **Explainable Intelligence:** Zero black-box outputs; every anomaly, diagnosis, and recommendation exposes underlying telemetry evidence and confidence ratings ($0.0 \le c \le 1.0$).
+* **Remaining Useful Life (RUL) Prognostics:** OLS degradation trend fitting, bounded RUL extrapolation, conservative wear bounds, and 5-tier forecasts with semantic safeguards.
+* **Mission Manager & Synthetic ATO Ingestion:** Fail-closed JSON parser validating synthetic ATO documents, enforcing planning horizons, and rejecting weapon or combat parameters.
+* **Multi-Signal Aircraft Eligibility Evaluation:** Deterministic qualification across lifecycle, airframe type, readiness (FMC/PMC/NMC), maintenance events, active anomalies, and prognostic lifing.
+* **Deterministic Sortie Allocation Engine:** Priority-ordered matching algorithm enforcing strict non-overlapping airframe commitments, transparent scoring, and alternative airframes.
+* **Human-in-the-Loop Governance:** Advisory proposal lifecycle (`PROPOSED` / `REQUIRES_REVIEW` -> `APPROVED` / `REJECTED`) with append-only SHA-256 cryptographic audit logging.
 
 > [!NOTE]
-> **Prototype Scope Notice:** This platform is an **SIH MVP / Prototype**. While the architectural foundation, data fabric, digital twin, and intelligence pipelines are production-grade and fully tested, physics-informed Remaining Useful Life (RUL) modeling, full Air Tasking Order (ATO) generation, and multi-base tactical HUD interfaces are scheduled for subsequent roadmap phases.
+> **Prototype Scope Notice:** This platform is an **SIH MVP / Prototype**. While the architectural foundation, data fabric, digital twin, intelligence, prognostics, and mission allocation pipelines are production-grade and fully verified (269 automated tests), combat route planning, live operational ATO ingestion, and weapons release interlocks are strictly excluded from prototype scope.
 
 ---
 
@@ -295,21 +299,23 @@ Sage-Command-Air-Power/
 ├── backend/                           # FastAPI Python Backend
 │   ├── app/
 │   │   ├── api/routes/health.py       # Health diagnostics endpoints
-│   │   ├── api/routes/aircraft.py     # Aircraft, twin, anomalies, diagnosis & maintenance endpoints
+│   │   ├── api/routes/aircraft.py     # Aircraft, twin, anomalies, prognostics & mission-eligibility endpoints
 │   │   ├── api/routes/missions.py     # Mission and sortie planning endpoints
 │   │   ├── api/routes/telemetry.py    # Telemetry ingestion & query endpoints
+│   │   ├── api/routes/ato.py          # Synthetic ATO validation, import, allocation proposals & governance
 │   │   ├── contracts/                 # Pydantic v2 response envelopes & caller identity
 │   │   ├── core/                      # Settings, structured logging, exception hierarchy
 │   │   ├── db/database.py             # SQLAlchemy 2.0 & SQLite WAL connection manager
-│   │   ├── db/models.py               # Relational ORM models (Aircraft, Telemetry, Twin, Anomalies)
+│   │   ├── db/models.py               # Relational ORM models (Aircraft, Telemetry, Twin, Anomalies, ATO, Proposals)
 │   │   ├── domain/                    # Canonical aerospace domain entities & enums
 │   │   ├── telemetry/                 # Telemetry Data Fabric (Normalizer, Quality, Envelope, Buffer)
 │   │   ├── digital_twin/              # Aircraft Digital Twin (Estimator, Health, Wear, Sessions)
 │   │   ├── intelligence/              # Subsystem Intelligence (Detectors, Diagnosis, Maintenance)
 │   │   ├── prognostics/               # Prognostics & Remaining Useful Life / RUL (Trend, RUL, Forecast)
+│   │   ├── mission_manager/           # Mission Manager & Governed ATO Allocation Engine (Phase 7)
 │   │   ├── services/                  # Business services, policy engine, audit ledger, execution gateway
 │   │   └── main.py                    # Application entrypoint & lifespan handlers
-│   ├── tests/                         # Automated unit and integration tests (214 passing)
+│   ├── tests/                         # Automated unit and integration tests (269 passing)
 │   └── requirements.txt               # Backend dependencies
 ├── frontend/                          # Next.js 16 / React 19 Frontend Shell
 │   ├── app/
@@ -319,10 +325,12 @@ Sage-Command-Air-Power/
 │   └── package.json                   # Frontend dependencies
 ├── docs/                              # Technical Documentation
 │   ├── AERO_CODEBASE_RECONNAISSANCE.md # System architecture reconnaissance & baseline audit
-│   ├── ARCHITECTURE.md                # System Architecture Baseline Specification (v1.5.0)
+│   ├── ARCHITECTURE.md                # System Architecture Baseline Specification (v1.6.0)
 │   ├── AERO_DOMAIN_MODEL.md           # Canonical Aerospace Domain Model Specification
 │   ├── AERO_TELEMETRY_DATA_FABRIC.md  # Phase 3 Telemetry Data Fabric Specification
 │   ├── AERO_DIGITAL_TWIN.md           # Phase 4 Aircraft Digital Twin Specification
+│   ├── AERO_PROGNOSTICS_RUL.md        # Phase 6 Predictive Maintenance & RUL Specification
+│   ├── AERO_MISSION_MANAGER.md        # Phase 7 Mission Manager & ATO Foundation Specification
 │   ├── AERO_INTELLIGENCE.md           # Phase 5 Subsystem Intelligence & Anomaly Detection Specification
 │   └── AERO_PROGNOSTICS.md            # Phase 6 Predictive Maintenance & RUL Specification
 ├── .env.example                       # Safe environment variables template

@@ -27,6 +27,7 @@ from app.api.routes.health import router as health_router
 from app.api.routes.aircraft import router as aircraft_router
 from app.api.routes.missions import router as missions_router
 from app.api.routes.telemetry import router as telemetry_router
+from app.api.routes.ato import ato_router, proposals_router
 
 logger = get_logger("app.main")
 
@@ -185,6 +186,8 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app.include_router(aircraft_router, prefix=resolved_settings.API_PREFIX)
     app.include_router(missions_router, prefix=resolved_settings.API_PREFIX)
     app.include_router(telemetry_router, prefix=resolved_settings.API_PREFIX)
+    app.include_router(ato_router, prefix=resolved_settings.API_PREFIX)
+    app.include_router(proposals_router, prefix=resolved_settings.API_PREFIX)
 
     @app.get("/", tags=["Root"])
     async def get_root():

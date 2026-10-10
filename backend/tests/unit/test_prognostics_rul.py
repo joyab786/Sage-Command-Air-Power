@@ -57,6 +57,9 @@ def test_rul_insufficient_history_fallback():
 
     assert rul.prediction_method == PredictionMethod.INSUFFICIENT_HISTORY_FALLBACK
     assert rul.estimated_rul_hours == 1000.0
+    assert rul.is_supported is False
+    assert rul.is_nominal_ceiling is True
+    assert rul.rul_status == "INSUFFICIENT_DATA"
     assert rul.confidence <= 0.25
     assert any("Insufficient historical observations" in factor for factor in rul.limiting_factors)
     assert rul.lower_bound_hours <= rul.estimated_rul_hours <= rul.upper_bound_hours
@@ -69,8 +72,28 @@ def test_rul_stable_trend_nominal_baseline():
 
     assert rul.prediction_method == PredictionMethod.BASELINE_NOMINAL
     assert rul.estimated_rul_hours == 1000.0
+    assert rul.is_supported is True
+    assert rul.is_nominal_ceiling is True
+    assert rul.rul_status == "NOMINAL_BASELINE"
     assert rul.confidence == 0.90
     assert "stable" in rul.explanation.lower()
+
+
+def test_rul_semantic_safeguard_unsupported_not_treated_as_guaranteed_life():
+    """Confirms unsupported RUL is explicitly tagged is_supported=False to prevent unvalidated lifing."""
+    trend_insufficient = _build_trend(TrendDirection.INSUFFICIENT_DATA, cur_health=88.0, samples=1)
+    rul_insufficient = default_rul_predictor.predict(trend_insufficient)
+
+    assert rul_insufficient.is_supported is False
+    assert rul_insufficient.rul_status == "INSUFFICIENT_DATA"
+    assert rul_insufficient.is_nominal_ceiling is True
+
+    trend_degrading = _build_trend(TrendDirection.DEGRADING, cur_health=85.0, rate=2.0, samples=5)
+    rul_degrading = default_rul_predictor.predict(trend_degrading)
+
+    assert rul_degrading.is_supported is True
+    assert rul_degrading.is_nominal_ceiling is False
+    assert rul_degrading.rul_status == "ESTIMATED"
 
 
 def test_rul_degrading_trend_linear_formula():
